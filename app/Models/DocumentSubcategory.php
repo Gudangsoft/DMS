@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['document_category_id', 'code', 'name', 'description', 'sort_order', 'is_active'])]
+#[Fillable(['document_category_id', 'code', 'name', 'description', 'cover_image', 'sort_order', 'is_active'])]
 class DocumentSubcategory extends Model
 {
     /** @use HasFactory<DocumentSubcategoryFactory> */

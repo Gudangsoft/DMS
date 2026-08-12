@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DocumentSubcategories\Schemas;
 
 use App\Models\DocumentCategory;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -14,6 +15,7 @@ class DocumentSubcategoryForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(2)
             ->components([
                 Select::make('document_category_id')
                     ->label('Kategori')
@@ -28,6 +30,15 @@ class DocumentSubcategoryForm
                     ->required()
                     ->maxLength(255),
                 Textarea::make('description')
+                    ->columnSpanFull(),
+                FileUpload::make('cover_image')
+                    ->label('Gambar')
+                    ->image()
+                    ->disk('public')
+                    ->directory('subcategories')
+                    ->imageEditor()
+                    ->imageEditorAspectRatios(['16:9', '4:3', '1:1'])
+                    ->helperText('Opsional — dipakai sebagai gambar sampul subkategori ini.')
                     ->columnSpanFull(),
                 TextInput::make('sort_order')
                     ->required()

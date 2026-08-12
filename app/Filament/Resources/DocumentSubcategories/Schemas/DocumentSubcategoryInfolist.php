@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DocumentSubcategories\Schemas;
 
 use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -12,6 +13,11 @@ class DocumentSubcategoryInfolist
     {
         return $schema
             ->components([
+                ImageEntry::make('cover_image')
+                    ->label('Gambar')
+                    ->disk('public')
+                    ->columnSpanFull()
+                    ->visible(fn ($record) => filled($record->cover_image)),
                 TextEntry::make('document_category_id')
                     ->numeric(),
                 TextEntry::make('code'),
