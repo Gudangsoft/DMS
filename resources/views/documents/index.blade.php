@@ -126,16 +126,18 @@
             <div class="mt-3 space-y-4">
                 @forelse ($documents as $document)
                     <a href="{{ route('documents.show', $document->uuid) }}"
-                        class="group flex gap-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 transition hover:-translate-y-0.5 hover:shadow-md sm:gap-5 sm:p-5">
-                        <div class="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg sm:h-32 sm:w-40"
+                        class="group flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 transition hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:gap-5 sm:p-5">
+                        {{-- Wide banner-style cover (matches the reference site's card
+                             proportions) instead of a small square thumbnail. --}}
+                        <div class="relative h-36 w-full shrink-0 overflow-hidden rounded-lg sm:h-32 sm:w-56"
                             style="{{ $document->category->cover_image ? "background-image:url('".\Illuminate\Support\Facades\Storage::disk('public')->url($document->category->cover_image)."');background-size:cover;background-position:center;" : 'background:'.$coverGradients[$document->document_category_id % count($coverGradients)].';' }}">
                             @unless ($document->category->cover_image)
                                 <div class="absolute inset-0 flex items-center justify-center opacity-25">
-                                    <x-dynamic-component :component="$document->category->icon ?: 'heroicon-o-document-text'" class="h-10 w-10 text-white sm:h-14 sm:w-14" />
+                                    <x-dynamic-component :component="$document->category->icon ?: 'heroicon-o-document-text'" class="h-12 w-12 text-white sm:h-14 sm:w-14" />
                                 </div>
                             @endunless
-                            <div class="absolute inset-x-0 bottom-0 bg-black/30 px-2 py-1">
-                                <p class="truncate text-[9px] font-semibold tracking-wide text-white/90 uppercase sm:text-[10px]">{{ $document->category->name }}</p>
+                            <div class="absolute inset-x-0 bottom-0 bg-black/30 px-2.5 py-1.5">
+                                <p class="truncate text-xs font-semibold tracking-wide text-white/90 uppercase">{{ $document->category->name }}</p>
                             </div>
                         </div>
 
