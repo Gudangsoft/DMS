@@ -9,8 +9,13 @@
 # hard requirement, and won't abort the deploy if npm isn't installed.
 set -e
 
-echo "==> Pulling latest code"
-git pull origin main
+# Fetch + hard reset instead of `git pull` — this is a deployment target, not
+# a place for local edits, so any drift on the server (file permissions,
+# stray manual edits, etc.) should always lose to origin/main rather than
+# blocking the deploy with a merge conflict.
+echo "==> Syncing to latest origin/main"
+git fetch origin main
+git reset --hard origin/main
 
 echo "==> Installing PHP dependencies"
 composer install --no-dev --optimize-autoloader
@@ -30,8 +35,11 @@ echo "==> Rebuilding config/route/view caches"
 php artisan config:clear
 php artisan config:cache
 php artisan route:cache
-php artisan view:cache
 php artisan event:cache
+# Non-fatal: fails if APP_DEBUG=true (Laravel's own exception-page views hit
+# a framework quirk during caching) — production should have APP_DEBUG=false
+# anyway, but this makes sure a stale flag doesn't block the whole deploy.
+php artisan view:cache || echo "==> view:cache failed (check APP_DEBUG in .env) — continuing anyway"
 
 echo "==> Restarting queue workers"
 php artisan queue:restart
