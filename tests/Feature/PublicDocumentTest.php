@@ -159,6 +159,29 @@ class PublicDocumentTest extends TestCase
         $this->get(route('categories.show', $document->category->code))->assertOk();
     }
 
+    public function test_category_show_page_groups_documents_by_year_and_shows_descriptions(): void
+    {
+        $older = $this->publishedDocumentWithFile();
+        $older->update(['description' => 'Deskripsi dokumen lama', 'year' => 2023]);
+
+        $newer = Document::factory()->create([
+            'document_category_id' => $older->document_category_id,
+            'confidentiality_level' => ConfidentialityLevel::PublicLevel,
+            'description' => 'Deskripsi dokumen terbaru',
+            'year' => 2026,
+        ]);
+        $newer->status = DocumentStatus::Published;
+        $newer->published_at = now();
+        $newer->save();
+
+        DocumentVersion::factory()->create(['document_id' => $newer->id, 'version' => '1.0']);
+
+        $response = $this->get(route('categories.show', $older->category->code));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['2026', 'Deskripsi dokumen terbaru', '2023', 'Deskripsi dokumen lama']);
+    }
+
     public function test_restricted_document_requires_direct_permission_on_frontend(): void
     {
         $document = $this->publishedDocumentWithFile(ConfidentialityLevel::Restricted);

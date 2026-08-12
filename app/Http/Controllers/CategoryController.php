@@ -24,15 +24,22 @@ class CategoryController extends Controller
      */
     public function show(Request $request, DocumentCategory $category): View
     {
-        $documents = $category->documents()
+        // Grouped by year (poin: "dikelompokkan pertahun") rather than paginated —
+        // a category's archive reads more like a set of yearly sections than a
+        // flat list, and splitting a year's documents across pages would look
+        // broken once grouping is applied.
+        $documentsByYear = $category->documents()
             ->visibleTo($request->user())
             ->with(['subcategory', 'type', 'unit'])
+            ->orderByDesc('year')
             ->latest('published_at')
-            ->paginate(12);
+            ->get()
+            ->groupBy('year');
 
         return view('categories.show', [
             'category' => $category,
-            'documents' => $documents,
+            'documentsByYear' => $documentsByYear,
+            'documentsCount' => $documentsByYear->flatten()->count(),
         ]);
     }
 }

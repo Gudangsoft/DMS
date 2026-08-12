@@ -24,27 +24,40 @@
         </div>
     </div>
 
-    <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        @forelse ($documents as $document)
-            <a href="{{ route('documents.show', $document->uuid) }}"
-                class="group flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 transition hover:-translate-y-0.5 hover:shadow-md">
-                @if ($document->subcategory)
-                    <span class="inline-flex w-fit rounded bg-brand-navy/10 px-2 py-0.5 text-xs font-medium text-brand-navy">
-                        {{ $document->subcategory->name }}
-                    </span>
-                @endif
-                <h2 class="mt-3 line-clamp-2 font-semibold text-gray-800 group-hover:text-brand-navy">{{ $document->title }}</h2>
-                <p class="mt-1 text-xs text-gray-500">{{ $document->document_number ?? 'Belum bernomor' }} &middot; {{ $document->year }}</p>
-            </a>
-        @empty
-            <div class="col-span-full rounded-xl bg-white py-12 text-center shadow-sm ring-1 ring-gray-950/5">
-                <x-heroicon-o-document-magnifying-glass class="mx-auto h-10 w-10 text-gray-300" />
-                <p class="mt-3 text-sm text-gray-500">Belum ada dokumen published di kategori ini.</p>
-            </div>
-        @endforelse
-    </div>
+    @if ($documentsCount > 0)
+        <p class="mt-6 text-sm text-gray-500">{{ $documentsCount }} dokumen ditemukan</p>
 
-    <div class="mt-8">
-        {{ $documents->links() }}
-    </div>
+        @foreach ($documentsByYear as $year => $yearDocuments)
+            <div class="mt-6">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-lg font-semibold text-brand-navy">{{ $year }}</h2>
+                    <span class="h-px flex-1 bg-gray-200"></span>
+                    <span class="text-xs font-medium text-gray-400">{{ $yearDocuments->count() }} dokumen</span>
+                </div>
+
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($yearDocuments as $document)
+                        <a href="{{ route('documents.show', $document->uuid) }}"
+                            class="group flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 transition hover:-translate-y-0.5 hover:shadow-md">
+                            @if ($document->subcategory)
+                                <span class="inline-flex w-fit rounded bg-brand-navy/10 px-2 py-0.5 text-xs font-medium text-brand-navy">
+                                    {{ $document->subcategory->name }}
+                                </span>
+                            @endif
+                            <h3 class="mt-3 line-clamp-2 font-semibold text-gray-800 group-hover:text-brand-navy">{{ $document->title }}</h3>
+                            <p class="mt-1 line-clamp-2 text-sm text-gray-500">
+                                {{ $document->description ?: 'Belum ada deskripsi untuk dokumen ini.' }}
+                            </p>
+                            <p class="mt-3 text-xs text-gray-400">{{ $document->document_number ?? 'Belum bernomor' }} &middot; {{ $document->year }}</p>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+    @else
+        <div class="mt-6 rounded-xl bg-white py-12 text-center shadow-sm ring-1 ring-gray-950/5">
+            <x-heroicon-o-document-magnifying-glass class="mx-auto h-10 w-10 text-gray-300" />
+            <p class="mt-3 text-sm text-gray-500">Belum ada dokumen published di kategori ini.</p>
+        </div>
+    @endif
 @endsection
