@@ -4,7 +4,9 @@ namespace Tests\Feature\Filament;
 
 use App\Enums\UserRole;
 use App\Filament\Resources\MenuItems\Pages\CreateMenuItem;
+use App\Filament\Resources\MenuItems\Pages\EditMenuItem;
 use App\Filament\Resources\MenuItems\Pages\ListMenuItems;
+use App\Filament\Resources\MenuItems\MenuItemResource;
 use App\Models\MenuItem;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
@@ -132,6 +134,19 @@ class MenuItemResourceTest extends TestCase
 
         $orderedChildren = $parent->fresh()->children()->pluck('id')->all();
         $this->assertSame([$childA->id, $childB->id], $orderedChildren);
+    }
+
+    public function test_saving_edit_form_redirects_back_to_the_list(): void
+    {
+        $this->actingAs($this->admin());
+
+        $item = MenuItem::factory()->create(['label' => 'Sambutan Ketua']);
+
+        Livewire::test(EditMenuItem::class, ['record' => $item->getRouteKey()])
+            ->fillForm(['label' => 'Sambutan Ketua Updated'])
+            ->call('save')
+            ->assertHasNoFormErrors()
+            ->assertRedirect(MenuItemResource::getUrl('index'));
     }
 
     public function test_staff_cannot_manage_menu_items(): void
