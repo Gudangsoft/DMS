@@ -30,12 +30,15 @@ class MenuItemsTable
                     ->label('Aktif')
                     ->boolean(),
             ])
-            // Parent immediately followed by its own children, instead of every
-            // parent first and every child afterwards — makes each dropdown
-            // group visually obvious while dragging to reorder.
-            ->modifyQueryUsing(fn ($query) => $query->orderByRaw('COALESCE(parent_id, id) asc')
-                ->orderByRaw('(parent_id is not null) asc')
-                ->orderBy('sort_order'))
+            // Plain sort_order ascending — NOT clustered by parent/id. Filament's
+            // drag-to-reorder assigns new sort_order values based on final visual
+            // row position, then the table re-renders using whatever ordering this
+            // query defines. A COALESCE(parent_id, id)-based clustering used to sit
+            // here to group each parent with its children, but for top-level items
+            // COALESCE(parent_id, id) === id, so drags between top-level items had
+            // zero visible effect after the drop (id order always won over the
+            // freshly-written sort_order) — reordering looked completely broken.
+            ->defaultSort('sort_order')
             ->reorderable('sort_order')
             ->recordActions([
                 EditAction::make(),

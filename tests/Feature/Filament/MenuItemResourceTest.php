@@ -136,6 +136,27 @@ class MenuItemResourceTest extends TestCase
         $this->assertSame([$childA->id, $childB->id], $orderedChildren);
     }
 
+    /**
+     * Regression test: an earlier version of MenuItemsTable grouped rows by
+     * COALESCE(parent_id, id), which for top-level items is just `id` — so
+     * dragging a top-level item to a new position updated sort_order
+     * correctly, but the table kept rendering in id order regardless,
+     * making reordering look completely broken.
+     */
+    public function test_reordering_top_level_items_actually_changes_render_order(): void
+    {
+        $this->actingAs($this->admin());
+
+        $a = MenuItem::factory()->create(['label' => 'A', 'location' => 'header', 'sort_order' => 1]);
+        $b = MenuItem::factory()->create(['label' => 'B', 'location' => 'header', 'sort_order' => 2]);
+        $c = MenuItem::factory()->create(['label' => 'C', 'location' => 'header', 'sort_order' => 3]);
+
+        Livewire::test(ListMenuItems::class)
+            ->set('activeTab', 'header')
+            ->call('reorderTable', [$c->id, $a->id, $b->id])
+            ->assertCanSeeTableRecords([$c, $a, $b], inOrder: true);
+    }
+
     public function test_saving_edit_form_redirects_back_to_the_list(): void
     {
         $this->actingAs($this->admin());
