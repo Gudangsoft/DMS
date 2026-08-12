@@ -1,0 +1,33 @@
+name: Deploy to Production
+
+# Runs deploy.sh on the server over SSH every time main is updated — no more
+# building locally and uploading public/build by hand. Requires four repo
+# secrets to be configured first (Settings → Secrets and variables → Actions
+# on the GitHub repo — see the setup notes wherever this file is discussed):
+#   DEPLOY_HOST  — server hostname/IP (e.g. dms2.stiekasihbangsa.ac.id)
+#   DEPLOY_USER  — SSH username
+#   DEPLOY_KEY   — SSH private key (matching a public key authorized on the server)
+#   DEPLOY_PATH  — absolute path to the project on the server
+#                  (e.g. /www/wwwroot/dms2.stiekasihbangsa.ac.id)
+# Optional:
+#   DEPLOY_PORT  — SSH port, defaults to 22 if not set
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            bash deploy.sh
