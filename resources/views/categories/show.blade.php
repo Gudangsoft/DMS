@@ -5,10 +5,17 @@
         <x-heroicon-o-arrow-left class="h-4 w-4" /> Semua Kategori
     </a>
 
+    @if ($category->cover_image)
+        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($category->cover_image) }}" alt="{{ $category->name }}"
+            class="mt-3 w-full rounded-xl shadow-sm">
+    @endif
+
     <div class="mt-3 flex items-center gap-3">
-        <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-navy/10">
-            <x-dynamic-component :component="$category->icon ?: 'heroicon-o-folder'" class="h-6 w-6 text-brand-navy" />
-        </span>
+        @unless ($category->cover_image)
+            <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-brand-navy/10">
+                <x-dynamic-component :component="$category->icon ?: 'heroicon-o-folder'" class="h-6 w-6 text-brand-navy" />
+            </span>
+        @endunless
         <div>
             <h1 class="text-2xl font-semibold text-brand-navy">{{ $category->name }}</h1>
             @if ($category->description)
