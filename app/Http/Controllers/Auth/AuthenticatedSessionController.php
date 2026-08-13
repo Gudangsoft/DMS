@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Support\MathCaptcha;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,11 +14,15 @@ use Illuminate\View\View;
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
+     * Display the login view. A fresh captcha challenge is generated on every
+     * visit — including the redirect-back-with-errors after a failed
+     * attempt, since that's a normal GET to this same action.
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view('auth.login', [
+            'captcha' => MathCaptcha::generate('login'),
+        ]);
     }
 
     /**

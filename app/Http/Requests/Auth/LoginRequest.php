@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\MathCaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -27,15 +28,24 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'captcha' => ['required'],
         ];
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Attempt to authenticate the request's credentials. Captcha is checked
+     * first — deliberately before the rate limiter and before touching the
+     * database — so a wrong answer never counts as a real credential attempt.
      */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+
+        if (! MathCaptcha::verify('login', $this->input('captcha'))) {
+            throw ValidationException::withMessages([
+                'captcha' => 'Jawaban perhitungan salah. Silakan coba lagi.',
+            ]);
+        }
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());

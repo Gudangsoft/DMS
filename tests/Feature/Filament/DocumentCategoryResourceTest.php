@@ -3,6 +3,8 @@
 namespace Tests\Feature\Filament;
 
 use App\Enums\UserRole;
+use App\Filament\Resources\DocumentCategories\DocumentCategoryResource;
+use App\Filament\Resources\DocumentCategories\Pages\CreateDocumentCategory;
 use App\Filament\Resources\DocumentCategories\Pages\EditDocumentCategory;
 use App\Models\DocumentCategory;
 use App\Models\User;
@@ -56,6 +58,40 @@ class DocumentCategoryResourceTest extends TestCase
 
         $this->assertNotNull($category->fresh()->cover_image);
         Storage::disk('public')->assertExists($category->fresh()->cover_image);
+    }
+
+    /**
+     * Panel-wide default set in AdminPanelProvider (resourceEditPageRedirect /
+     * resourceCreatePageRedirect: 'index') — this pins it down for a resource
+     * other than MenuItem to make sure the panel-wide setting, not a one-off
+     * per-resource override, is what's doing the work.
+     */
+    public function test_saving_edit_form_redirects_back_to_the_list(): void
+    {
+        $this->actingAs($this->admin());
+
+        $category = DocumentCategory::factory()->create();
+
+        Livewire::test(EditDocumentCategory::class, ['record' => $category->getRouteKey()])
+            ->fillForm(['name' => 'Kategori Diperbarui'])
+            ->call('save')
+            ->assertHasNoFormErrors()
+            ->assertRedirect(DocumentCategoryResource::getUrl('index'));
+    }
+
+    public function test_saving_create_form_redirects_back_to_the_list(): void
+    {
+        $this->actingAs($this->admin());
+
+        Livewire::test(CreateDocumentCategory::class)
+            ->fillForm([
+                'code' => 'TST',
+                'name' => 'Kategori Baru',
+                'sort_order' => 0,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors()
+            ->assertRedirect(DocumentCategoryResource::getUrl('index'));
     }
 
     public function test_categories_index_shows_cover_image_when_set(): void

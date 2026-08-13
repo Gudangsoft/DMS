@@ -49,7 +49,7 @@
                                     class="flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm font-medium text-gray-700 hover:bg-brand-navy/5 hover:text-brand-navy">
                                     <span class="flex min-w-0 items-center gap-2">
                                         <x-dynamic-component :component="$cat->icon ?: 'heroicon-o-folder'" class="h-4 w-4 shrink-0 text-brand-navy/60" />
-                                        <span class="truncate">{{ $cat->name }}</span>
+                                        <span class="truncate">{{ $cat->code }}. {{ $cat->name }}</span>
                                     </span>
                                     <x-heroicon-o-chevron-down class="h-4 w-4 shrink-0 text-gray-400 transition" ::class="open ? 'rotate-180' : ''" />
                                 </button>

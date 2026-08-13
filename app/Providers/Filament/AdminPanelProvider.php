@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\EditProfile;
+use App\Filament\Pages\Auth\Login;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -64,10 +65,16 @@ class AdminPanelProvider extends PanelProvider
 
                 return $favicon ? Storage::disk('public')->url($favicon) : asset('favicon.ico');
             })
-            ->login()
+            ->login(Login::class)
             ->passwordReset()
             ->profile(EditProfile::class, isSimple: false)
             ->databaseNotifications()
+            // Panel-wide default: every resource's Create/Edit form goes back to
+            // the list after saving, instead of Filament's default of staying on
+            // the same form — matches how admins actually expect this to behave,
+            // and covers every resource without needing a per-page override.
+            ->resourceCreatePageRedirect('index')
+            ->resourceEditPageRedirect('index')
             ->colors([
                 'primary' => Color::hex('#0B2545'),
                 'gray' => Color::Slate,

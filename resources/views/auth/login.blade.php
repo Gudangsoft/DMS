@@ -28,6 +28,17 @@
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-navy focus:ring-brand-navy sm:text-sm">
         </div>
 
+        <div>
+            <label for="captcha" class="block text-sm font-medium text-gray-700">
+                Berapa hasil dari {{ $captcha['a'] }} + {{ $captcha['b'] }}?
+            </label>
+            <input id="captcha" type="number" name="captcha" required autocomplete="off" inputmode="numeric"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-navy focus:ring-brand-navy sm:text-sm">
+            @error('captcha')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+        </div>
+
         <div class="flex items-center justify-between">
             <label class="flex items-center gap-2 text-sm text-gray-600">
                 <input type="checkbox" name="remember" class="rounded border-gray-300 text-brand-navy focus:ring-brand-navy">

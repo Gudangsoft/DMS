@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Support\MathCaptcha;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
@@ -15,7 +16,13 @@ class AuditTrailTest extends TestCase
     {
         $user = User::factory()->create(['password' => 'password']);
 
-        $this->post('/login', ['email' => $user->email, 'password' => 'password']);
+        $challenge = MathCaptcha::generate('login');
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'captcha' => $challenge['a'] + $challenge['b'],
+        ]);
 
         $activity = Activity::where('log_name', 'auth')->where('description', 'login')->first();
 
