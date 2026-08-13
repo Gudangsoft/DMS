@@ -41,6 +41,9 @@
                             class="group flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 transition hover:-translate-y-0.5 hover:shadow-md">
                             @if ($document->subcategory)
                                 <span class="inline-flex w-fit rounded bg-brand-navy/10 px-2 py-0.5 text-xs font-medium text-brand-navy">
+                                    @if ($document->subcategory->code)
+                                        {{ $document->subcategory->code }}.
+                                    @endif
                                     {{ $document->subcategory->name }}
                                 </span>
                             @endif

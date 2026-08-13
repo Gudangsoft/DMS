@@ -4,7 +4,7 @@
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2">
             <span class="inline-flex rounded bg-brand-navy/10 px-2 py-0.5 text-xs font-medium text-brand-navy">
-                {{ $document->category->name }}@if ($document->subcategory) &middot; {{ $document->subcategory->name }} @endif
+                {{ $document->category->name }}@if ($document->subcategory) &middot; @if ($document->subcategory->code){{ $document->subcategory->code }}. @endif{{ $document->subcategory->name }} @endif
             </span>
             <h1 class="mt-3 text-2xl font-semibold text-gray-800">{{ $document->title }}</h1>
             @if ($document->description)

@@ -64,6 +64,9 @@
                                         <li>
                                             <a href="{{ route('documents.index', ['category' => $cat->code, 'subcategory' => $sub->id]) }}"
                                                 class="block rounded px-2 py-1.5 text-sm {{ (int) request('subcategory') === $sub->id ? 'font-semibold text-brand-navy' : 'text-gray-500 hover:text-brand-navy' }}">
+                                                @if ($sub->code)
+                                                    {{ $sub->code }}.
+                                                @endif
                                                 {{ $sub->name }}
                                             </a>
                                         </li>
