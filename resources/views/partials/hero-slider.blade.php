@@ -56,11 +56,19 @@
                              fade effect), and the copy sits in a solid-navy bar
                              underneath instead of stacked on top of the image. --}}
                         <div class="flex h-full flex-col">
+                            {{-- `background-position: center 70%` (not plain `center`) —
+                                 `cover` crops evenly top/bottom by default, and on these
+                                 photos that cut off the subjects' hands/laptop at the
+                                 bottom while leaving mostly-empty shelving visible at the
+                                 top. Shifting the focal point down keeps the part people
+                                 actually look at. The text bar below is also trimmed
+                                 (less padding/margins) so more of this fixed-height slide
+                                 goes to the photo instead. --}}
                             <div class="min-h-0 flex-1"
-                                style="{{ $slide->image ? "background-color:#0b2545;background-repeat:no-repeat;background-position:center;background-size:cover;background-image:url('".\Illuminate\Support\Facades\Storage::disk('public')->url($slide->image)."');" : 'background:linear-gradient(135deg, #0b2545 0%, #13315c 55%, #071a33 100%);' }}">
+                                style="{{ $slide->image ? "background-color:#0b2545;background-repeat:no-repeat;background-position:center 70%;background-size:cover;background-image:url('".\Illuminate\Support\Facades\Storage::disk('public')->url($slide->image)."');" : 'background:linear-gradient(135deg, #0b2545 0%, #13315c 55%, #071a33 100%);' }}">
                             </div>
 
-                            <div class="bg-brand-navy px-8 py-8 text-center text-white sm:px-16">
+                            <div class="bg-brand-navy px-8 py-5 text-center text-white sm:px-16">
                                 {{-- Wide enough for the subtitle to sit on one line on
                                      desktop instead of wrapping to two — a shorter text
                                      bar leaves more of the fixed slide height for the
@@ -82,7 +90,7 @@
                                         <p class="mt-2 text-sm text-white/80">{{ $fallbackSubtitle }}</p>
                                     @endif
 
-                                    <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+                                    <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
                                         @if ($slide->button_text && $slide->button_url)
                                             <a href="{{ $slide->button_url }}"
                                                 class="rounded-md bg-brand-gold px-5 py-2.5 text-sm font-semibold text-brand-navy hover:bg-brand-gold-light">
