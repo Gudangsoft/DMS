@@ -20,7 +20,14 @@
         </div>
     </div>
 
-    <div class="mt-6 lg:flex lg:items-start lg:gap-6">
+    {{-- On mobile, the sidebar (search + full category tree + advanced filters)
+         used to render above the document feed in normal flow, pushing every
+         result off-screen behind a long scroll. `filtersOpen` collapses the
+         category tree and advanced filters behind a toggle on small screens —
+         starts open if a category/filter is already active via the URL, same
+         as the existing per-section `open` pattern below. The search box stays
+         outside the toggle since it's compact and useful immediately. --}}
+    <div class="mt-6 lg:flex lg:items-start lg:gap-6" x-data="{ filtersOpen: {{ request()->hasAny(['category', 'subcategory', 'unit', 'year', 'type']) ? 'true' : 'false' }} }">
         {{-- Sidebar --}}
         <aside class="lg:w-72 lg:shrink-0">
             <div class="space-y-4 lg:sticky lg:top-24">
@@ -32,6 +39,13 @@
                     </div>
                 </form>
 
+                <button type="button" @click="filtersOpen = !filtersOpen"
+                    class="flex w-full items-center justify-between gap-2 rounded-xl bg-white p-4 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-950/5 lg:hidden">
+                    <span class="flex items-center gap-1.5"><x-heroicon-o-adjustments-horizontal class="h-4 w-4 text-brand-navy" /> Filter &amp; Kategori</span>
+                    <x-heroicon-o-chevron-down class="h-4 w-4 shrink-0 text-gray-400 transition" ::class="filtersOpen ? 'rotate-180' : ''" />
+                </button>
+
+                <div x-show="filtersOpen" x-cloak x-transition class="space-y-4 lg:!block">
                 <div class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5">
                     <h2 class="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-gray-500 uppercase">
                         <x-heroicon-o-folder class="h-4 w-4" /> Kategori Dokumen
@@ -112,6 +126,7 @@
                             Terapkan Filter
                         </button>
                     </form>
+                </div>
                 </div>
 
                 @if (request()->hasAny(['q', 'category', 'subcategory', 'unit', 'year', 'type']))

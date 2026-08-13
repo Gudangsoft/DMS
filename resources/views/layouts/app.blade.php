@@ -127,8 +127,9 @@
                 @endauth
             </div>
 
-            {{-- Mobile toggle --}}
-            <button type="button" @click="mobileOpen = !mobileOpen" class="text-white lg:hidden" aria-label="Buka menu">
+            {{-- Mobile toggle — `-m-2 p-2` grows the tap target to ~44px without
+                 changing the icon's visual size or the row's layout. --}}
+            <button type="button" @click="mobileOpen = !mobileOpen" class="-m-2 p-2 text-white lg:hidden" aria-label="Buka menu">
                 <x-heroicon-o-bars-3 class="h-7 w-7" x-show="!mobileOpen" />
                 <x-heroicon-o-x-mark class="h-7 w-7" x-show="mobileOpen" x-cloak />
             </button>
