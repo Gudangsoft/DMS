@@ -38,7 +38,7 @@
                              treatment — there's no room for a separate text bar at this
                              height. `cover` fills edge-to-edge, no letterboxing. --}}
                         <div class="relative flex h-full items-center justify-center overflow-y-auto px-8 py-10 text-center sm:px-16"
-                            style="{{ $slide->image ? "background-color:#0b2545;background-repeat:no-repeat;background-position:center;background-size:contain;background-image:linear-gradient(to bottom, rgba(11,37,69,.45), rgba(11,37,69,.8)), url('".\Illuminate\Support\Facades\Storage::disk('public')->url($slide->image)."');" : 'background:linear-gradient(135deg, #0b2545 0%, #13315c 55%, #071a33 100%);' }}">
+                            style="{{ $slide->image ? "background-color:#0b2545;background-repeat:no-repeat;background-position:center top;background-size:cover;background-image:linear-gradient(to bottom, rgba(11,37,69,.45), rgba(11,37,69,.8)), url('".\Illuminate\Support\Facades\Storage::disk('public')->url($slide->image)."');" : 'background:linear-gradient(135deg, #0b2545 0%, #13315c 55%, #071a33 100%);' }}">
                             <div class="mx-auto max-w-2xl text-white">
                                 <h1 class="mx-auto text-2xl sm:text-3xl font-bold">{{ $slide->title ?: $fallbackTitle }}</h1>
                                 @if ($slide->subtitle)
@@ -56,15 +56,14 @@
                              fade effect), and the copy sits in a solid-navy bar
                              underneath instead of stacked on top of the image. --}}
                         <div class="flex h-full flex-col">
-                            {{-- `background-size: contain` (not `cover`) — `cover` crops
-                                 whichever edge doesn't match the box's aspect ratio, which
-                                 was cutting people/objects off the top or bottom depending
-                                 on the photo. `contain` always shows the whole image,
-                                 letterboxed with the navy background color on the sides
-                                 that don't fill — that matches the solid-navy text bar
-                                 below, so it reads as intentional rather than empty space. --}}
+                            {{-- Back to `cover` (fills the box edge-to-edge — `contain`'s
+                                 letterboxing looked bad) with `background-position: center
+                                 top` — that pins the TOP of the photo to the top of the box,
+                                 so any excess `cover` needs to crop always comes off the
+                                 BOTTOM instead. Keeps faces/heads near the top of these
+                                 photos intact at the cost of cropping more at the bottom. --}}
                             <div class="min-h-0 flex-1"
-                                style="{{ $slide->image ? "background-color:#0b2545;background-repeat:no-repeat;background-position:center;background-size:contain;background-image:url('".\Illuminate\Support\Facades\Storage::disk('public')->url($slide->image)."');" : 'background:linear-gradient(135deg, #0b2545 0%, #13315c 55%, #071a33 100%);' }}">
+                                style="{{ $slide->image ? "background-color:#0b2545;background-repeat:no-repeat;background-position:center top;background-size:cover;background-image:url('".\Illuminate\Support\Facades\Storage::disk('public')->url($slide->image)."');" : 'background:linear-gradient(135deg, #0b2545 0%, #13315c 55%, #071a33 100%);' }}">
                             </div>
 
                             <div class="bg-brand-navy px-8 py-5 text-center text-white sm:px-16">
