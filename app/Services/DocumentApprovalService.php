@@ -90,6 +90,34 @@ class DocumentApprovalService
         });
     }
 
+    /**
+     * Admin shortcut used by the Filament "create document" form: skips the
+     * SUBMIT → UNDER_REVIEW reviewer step entirely and approves straight from
+     * DRAFT. Still records a DocumentApproval row (status Approved) so the
+     * approval history stays complete and consistent with the normal flow.
+     */
+    public function approveDirectly(Document $document, User $actor, ?string $comments = null): Document
+    {
+        return DB::transaction(function () use ($document, $actor, $comments) {
+            DocumentApproval::create([
+                'document_id' => $document->id,
+                'reviewer_id' => $actor->id,
+                'status' => ApprovalStatus::Approved,
+                'comments' => $comments,
+                'reviewed_at' => now(),
+            ]);
+
+            $document->status = DocumentStatus::Approved;
+            $document->approved_by = $actor->id;
+            $document->approved_at = now();
+            $document->save();
+
+            $document->owner->notify(new DocumentApprovedNotification($document));
+
+            return $document;
+        });
+    }
+
     public function reject(DocumentApproval $approval, User $actor, string $comments): Document
     {
         return DB::transaction(function () use ($approval, $actor, $comments) {

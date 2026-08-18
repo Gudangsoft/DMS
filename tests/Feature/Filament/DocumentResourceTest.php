@@ -11,6 +11,8 @@ use App\Models\DocumentCategory;
 use App\Models\DocumentType;
 use App\Models\Unit;
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -140,6 +142,77 @@ class DocumentResourceTest extends TestCase
             ])
             ->call('create')
             ->assertHasFormErrors(['file']);
+    }
+
+    public function test_can_create_a_document_and_directly_approve_and_publish_it(): void
+    {
+        $category = DocumentCategory::factory()->create();
+        $type = DocumentType::factory()->create();
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create();
+
+        Livewire::test(CreateDocument::class)
+            ->fillForm([
+                'title' => 'SOP Langsung Terbit',
+                'document_category_id' => $category->id,
+                'document_type_id' => $type->id,
+                'unit_id' => $unit->id,
+                'owner_id' => $owner->id,
+                'year' => 2026,
+                'confidentiality_level' => 'internal',
+                'file' => UploadedFile::fake()->create('sop.pdf', 200, 'application/pdf'),
+                'approve_and_publish' => true,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $document = Document::where('title', 'SOP Langsung Terbit')->firstOrFail();
+
+        $this->assertSame('published', $document->status->value);
+        $this->assertSame($this->admin->id, $document->approved_by);
+        $this->assertNotNull($document->approved_at);
+        $this->assertNotNull($document->published_at);
+        $this->assertCount(1, $document->approvals);
+        $this->assertSame('approved', $document->approvals->first()->status->value);
+    }
+
+    /**
+     * The toggle is only rendered when the acting user has both documents.approve
+     * and documents.publish — but a spoofed submission (e.g. via devtools) must
+     * still be rejected server-side in handleRecordCreation().
+     */
+    public function test_approve_and_publish_flag_is_ignored_without_permission(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        $this->seed(RoleSeeder::class);
+
+        $staff = User::factory()->create();
+        $staff->assignRole(UserRole::Staff->value);
+        $this->actingAs($staff);
+
+        $category = DocumentCategory::factory()->create();
+        $type = DocumentType::factory()->create();
+        $unit = Unit::factory()->create();
+
+        Livewire::test(CreateDocument::class)
+            ->fillForm([
+                'title' => 'Percobaan Spoof Toggle',
+                'document_category_id' => $category->id,
+                'document_type_id' => $type->id,
+                'unit_id' => $unit->id,
+                'owner_id' => $staff->id,
+                'year' => 2026,
+                'confidentiality_level' => 'internal',
+                'file' => UploadedFile::fake()->create('doc.pdf', 200, 'application/pdf'),
+                'approve_and_publish' => true,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $document = Document::where('title', 'Percobaan Spoof Toggle')->firstOrFail();
+
+        $this->assertSame('draft', $document->status->value);
+        $this->assertNull($document->approved_by);
     }
 
     public function test_can_edit_document_metadata(): void
