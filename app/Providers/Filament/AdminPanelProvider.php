@@ -87,6 +87,16 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::PAGE_HEADER_ACTIONS_BEFORE,
                 fn () => view('filament.partials.back-button'),
             )
+            // Navy/gold restyle of the login page chrome — scoped to Login only so
+            // it doesn't leak onto the password-reset "simple" pages. Registered on
+            // BODY_END (fires last in the document, after Filament's own dark-mode
+            // scripts re-run post-hydration) so the page-forced-light script inside
+            // it always wins.
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn () => view('filament.pages.auth.login-styles'),
+                scopes: Login::class,
+            )
             ->navigationGroups([
                 'Document Management',
                 'Approval',

@@ -2,12 +2,14 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Models\Setting;
 use App\Support\MathCaptcha;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Schema;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -33,6 +35,18 @@ class Login extends BaseLogin
     protected function regenerateCaptcha(): void
     {
         $this->mathCaptcha = MathCaptcha::generate('admin_login');
+    }
+
+    public function getHeading(): string|Htmlable|null
+    {
+        return 'Selamat Datang Kembali';
+    }
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        $siteName = Setting::get('site_name', 'Document Management System');
+
+        return "Masuk ke panel admin {$siteName}.";
     }
 
     public function form(Schema $schema): Schema
