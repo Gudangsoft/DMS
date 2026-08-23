@@ -113,19 +113,45 @@ return new class extends Migration
             }
 
             $cards .= <<<HTML
-                <div class="not-prose overflow-hidden rounded-lg border border-gray-200">
-                    <div class="aspect-video w-full">
+                <div class="vmp-card not-prose">
+                    <div class="vmp-card-media">
                         {$media}
                     </div>
-                    <div class="p-4">
-                        <h4 class="text-sm font-semibold uppercase text-brand-navy">{$title}</h4>
-                        <p class="mt-1 text-sm text-gray-600">{$desc}</p>
+                    <div class="vmp-card-body">
+                        <span class="vmp-card-eyebrow">{$title}</span>
+                        <p class="vmp-card-desc">{$desc}</p>
                     </div>
                 </div>
                 HTML;
         }
 
-        $content = $intro."\n<div class=\"not-prose mt-6 grid gap-6 sm:grid-cols-2\">\n{$cards}\n</div>";
+        // A real <style> tag, not Tailwind utility classes: this HTML is
+        // injected into the page at runtime from the database, never present
+        // in any Blade/JS file Tailwind's build scans, so utility classes
+        // used only here compile to nothing. A scoped stylesheet with its
+        // own class names sidesteps that entirely and is the only way to get
+        // hover/transition effects, which inline style="" can't express.
+        $style = <<<'HTML'
+            <style>
+                .vmp-grid { display: grid; gap: 1.5rem; margin-top: 1.5rem; }
+                @media (min-width: 640px) { .vmp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+                .vmp-card {
+                    display: flex; flex-direction: column; height: 100%;
+                    background: #fff; border-radius: 0.75rem; overflow: hidden;
+                    box-shadow: 0 1px 3px rgba(11, 37, 69, 0.08);
+                    border: 1px solid #e5e7eb;
+                    transition: box-shadow 0.2s ease, transform 0.2s ease;
+                }
+                .vmp-card:hover { box-shadow: 0 12px 24px -8px rgba(11, 37, 69, 0.22); transform: translateY(-2px); }
+                .vmp-card-media { position: relative; aspect-ratio: 16 / 9; width: 100%; background: #0b2545; }
+                .vmp-card-media iframe { width: 100%; height: 100%; border: 0; display: block; }
+                .vmp-card-body { flex: 1 1 auto; display: flex; flex-direction: column; gap: 0.375rem; padding: 1rem 1.25rem 1.25rem; border-top: 3px solid #d4af37; }
+                .vmp-card-eyebrow { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #0b2545; }
+                .vmp-card-desc { flex: 1 1 auto; margin: 0; font-size: 0.875rem; line-height: 1.4; color: #4b5563; }
+            </style>
+            HTML;
+
+        $content = $style.$intro."\n<div class=\"vmp-grid\">\n{$cards}\n</div>";
 
         DB::table('pages')
             ->where('slug', 'wp-video-materi-pelatihan')
