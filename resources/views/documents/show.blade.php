@@ -82,9 +82,6 @@
                 <p class="text-xs font-medium uppercase tracking-wide text-gray-500">QR Verifikasi</p>
                 <img src="{{ app(\App\Services\QrCodeService::class)->dataUri($document) }}"
                     alt="QR verifikasi dokumen" class="mx-auto mt-2 h-32 w-32">
-                <a href="{{ route('verify-document', $document->uuid) }}" class="mt-2 block text-xs text-brand-navy hover:underline">
-                    {{ route('verify-document', $document->uuid) }}
-                </a>
             </div>
         </div>
     </div>
