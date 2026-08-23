@@ -51,6 +51,14 @@ class ImportWordpressLegacyContent extends Command
 
     public function handle(): int
     {
+        // Some hosts run CLI with a very tight default memory_limit (seen as
+        // low as 128M) — hundreds of sequential HTTP downloads plus Eloquent
+        // model churn exhausts that quickly even though each step alone is
+        // small. This is a batch job, not a web request, so raising it here
+        // is safe and doesn't depend on editing php.ini on the server.
+        ini_set('memory_limit', '512M');
+        DB::disableQueryLog();
+
         $dryRun = (bool) $this->option('dry-run');
         $limit = $this->option('limit') ? (int) $this->option('limit') : null;
 
@@ -532,29 +540,33 @@ class ImportWordpressLegacyContent extends Command
             $tmpPath = null;
 
             try {
-                $response = Http::timeout(60)->retry(2, 1000)->get($item['file_url']);
+                $ext = strtolower(pathinfo(parse_url($item['file_url'], PHP_URL_PATH), PATHINFO_EXTENSION));
+                $tmpPath = tempnam(sys_get_temp_dir(), 'wpimport_').'.'.$ext;
+
+                // Streamed straight to disk via Guzzle's sink option instead of
+                // buffering the whole body as a PHP string — the previous
+                // approach held every downloaded file fully in memory, which is
+                // what exhausted a tight 128M CLI memory_limit after ~86 files.
+                $response = Http::timeout(60)->retry(2, 1000)->sink($tmpPath)->get($item['file_url']);
                 if ($response->failed()) {
                     $failed[] = "{$item['title']} — HTTP {$response->status()}";
 
                     continue;
                 }
 
-                $body = $response->body();
-                if (strlen($body) === 0) {
+                clearstatcache(true, $tmpPath);
+                $size = file_exists($tmpPath) ? filesize($tmpPath) : 0;
+                if ($size === 0) {
                     $failed[] = "{$item['title']} — empty response";
 
                     continue;
                 }
-                if ($maxBytes > 0 && strlen($body) > $maxBytes) {
+                if ($maxBytes > 0 && $size > $maxBytes) {
                     $skippedTooLarge++;
-                    $failed[] = "{$item['title']} — ".round(strlen($body) / 1048576, 1).'MB exceeds max upload size';
+                    $failed[] = "{$item['title']} — ".round($size / 1048576, 1).'MB exceeds max upload size';
 
                     continue;
                 }
-
-                $ext = strtolower(pathinfo(parse_url($item['file_url'], PHP_URL_PATH), PATHINFO_EXTENSION));
-                $tmpPath = tempnam(sys_get_temp_dir(), 'wpimport_').'.'.$ext;
-                file_put_contents($tmpPath, $body);
 
                 $categoryCode = $this->categoryCodeFor($item['wp_category_parent_name'], $item['wp_category_name']);
                 $category = DocumentCategory::where('code', $categoryCode)->firstOrFail();
@@ -615,6 +627,16 @@ class ImportWordpressLegacyContent extends Command
             } finally {
                 if ($tmpPath && file_exists($tmpPath)) {
                     @unlink($tmpPath);
+                }
+                unset($response, $document, $uploadedFile, $tmpPath);
+
+                // Eloquent models retain references to booted event listeners and
+                // relations that PHP's refcounting alone doesn't always reclaim
+                // promptly across a long-running loop — nudging the cyclic
+                // collector periodically keeps memory flat instead of climbing
+                // for the whole run.
+                if ($bar->getProgress() % 20 === 0) {
+                    gc_collect_cycles();
                 }
             }
         }
