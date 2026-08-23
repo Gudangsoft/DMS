@@ -80,7 +80,7 @@ class DocumentVersionService
             // observed collapsing to a generic application/octet-stream even for PDFs).
             // The extension is validated against ALLOWED_MIME_TYPES by Filament's
             // acceptedFileTypes() before this point, so it's the more trustworthy source.
-            'mime_type' => self::ALLOWED_MIME_TYPES[$extension] ?? $file->getMimeType(),
+            'mime_type' => self::ALLOWED_MIME_TYPES[$extension] ?? $this->guessMimeType($file),
             'checksum' => $checksum,
             'change_notes' => $changeNotes,
             'uploaded_by' => $uploader->id,
@@ -89,6 +89,23 @@ class DocumentVersionService
         $document->forceFill(['current_version' => $version->version])->save();
 
         return $version;
+    }
+
+    /**
+     * Only reached for an extension outside ALLOWED_MIME_TYPES, which
+     * shouldn't happen given upstream validation — but Symfony's
+     * File::getMimeType() unconditionally uses PHP's finfo extension, and
+     * some minimal hosting PHP builds ship without it enabled. Falling back
+     * to the constructor-supplied client mime type avoids a hard crash on
+     * those hosts instead of trusting a guess that can't run.
+     */
+    protected function guessMimeType(UploadedFile $file): ?string
+    {
+        if (! extension_loaded('fileinfo')) {
+            return $file->getClientMimeType() ?: null;
+        }
+
+        return $file->getMimeType();
     }
 
     /**

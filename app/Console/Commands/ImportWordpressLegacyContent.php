@@ -335,56 +335,117 @@ class ImportWordpressLegacyContent extends Command
     // ------------------------------------------------------------------
 
     /**
-     * Top-level WP category name -> existing DocumentCategory code. These 5
-     * categories already exist in this DMS (seeded ahead of this import) —
-     * we reuse them rather than creating a parallel taxonomy.
+     * Top-level WP category name -> DocumentCategory code. Matches the old
+     * WordPress site's own 10-category breakdown (A-J) one-to-one — see
+     * DocumentCategorySeeder / RestructureDocumentCategoriesToWordpress,
+     * which this mirrors so a document lands in its final category the
+     * moment it's created instead of needing a later reassignment pass.
      */
     protected function categoryCodeFor(?string $wpParentName, ?string $wpCatName): string
     {
         $name = $wpParentName ?? $wpCatName ?? '';
 
         return match (true) {
-            str_contains($name, 'Dokumen Acuan') => 'DA',
-            str_contains($name, 'SPMI') => 'DM',
-            str_contains($name, 'Laporan Perguruan Tinggi') => 'ADM',
-            str_contains($name, 'Surat Keputusan') => 'ADM',
-            str_contains($name, 'Akreditasi') => 'AKR',
-            str_contains($name, 'Pedoman Akademik') => 'DAK',
-            str_contains($name, 'Satgas') => 'ADM',
-            str_contains($name, 'Alumni') => 'ADM',
-            str_contains($name, 'Mitra Kerjasama') => 'ADM',
-            str_contains($name, 'Sosialisasi') => 'ADM',
-            default => 'ADM',
+            str_contains($name, 'Dokumen Acuan') => 'A',
+            str_contains($name, 'SPMI') => 'B',
+            str_contains($name, 'Laporan Perguruan Tinggi') => 'C',
+            str_contains($name, 'Surat Keputusan') => 'D',
+            str_contains($name, 'Akreditasi') => 'E',
+            str_contains($name, 'Pedoman Akademik') => 'F',
+            str_contains($name, 'Satgas') => 'G',
+            str_contains($name, 'Alumni') => 'H',
+            str_contains($name, 'Mitra Kerjasama') => 'I',
+            str_contains($name, 'Sosialisasi') => 'J',
+            default => 'A',
         };
     }
 
     /**
-     * WP subcategory name -> existing DocumentSubcategory code (null when no
-     * confident match — the document still gets its top-level category).
+     * WP subcategory name -> DocumentSubcategory code within the given top
+     * category (null when no confident match — the document still gets its
+     * top-level category). See DocumentSubcategorySeeder for the full list.
      */
-    protected function subcategoryCodeFor(?string $wpCatName): ?string
+    protected function subcategoryCodeFor(?string $wpCatName, string $categoryCode = 'A'): ?string
     {
         $name = $wpCatName ?? '';
 
-        return match (true) {
-            str_contains($name, 'Regulasi Pemerintah') => 'DA01',
-            str_contains($name, 'Rencana Induk Pengembangan') => 'DA03',
-            str_contains($name, 'Statuta') => 'DA04',
-            str_contains($name, 'SOTK') && str_contains($name, 'SPMI') === false => 'DA05',
-            str_contains($name, 'Rencana Strategis') || str_contains($name, 'Renstra') => 'DA06',
-            str_contains($name, 'Rencana Operasional') || str_contains($name, 'Renop') => 'DA07',
-            str_contains($name, 'RKAT') => 'DA08',
-            str_contains($name, 'Kebijakan SPMI') => 'DM01',
-            str_contains($name, 'Manual SPMI') => 'DM02',
-            str_contains($name, 'Standar SPMI') => 'DM03',
-            str_contains($name, 'SOP SPMI') => 'DM04',
-            str_contains($name, 'Formulir SPMI') => 'DM06',
-            $name === 'Pedoman Akademik' => 'DAK03',
-            str_contains($name, 'SK ') || str_contains($name, 'Surat Keputusan') => 'ADM01',
-            str_contains($name, 'Mitra Kerjasama') || str_contains($name, 'Dunia Usaha') || str_contains($name, 'Lembaga Pendidikan') => 'ADM04',
-            str_contains($name, 'Laporan') => 'ADM05',
-            default => null,
+        $map = match ($categoryCode) {
+            'A' => [
+                'Regulasi Pemerintah' => 'A01',
+                'Visi Misi Tujuan Strategi' => 'A02',
+                'Rencana Induk Pengembangan' => 'A03',
+                'Statuta' => 'A04',
+                'SOTK' => 'A05',
+                'Rencana Strategis' => 'A06', 'Renstra' => 'A06',
+                'Rencana Operasional' => 'A07', 'Renop' => 'A07',
+                'RKAT' => 'A08',
+                'Resbang' => 'A09',
+                'Panduan Akreditasi' => 'A10',
+            ],
+            'B' => [
+                'Kebijakan SPMI' => 'B01',
+                'Manual SPMI' => 'B02',
+                'Standar SPMI' => 'B03',
+                'Formulir SPMI' => 'B04',
+                'SOP SPMI' => 'B05',
+                'SOTK SPMI' => 'B06',
+            ],
+            'C' => [
+                'Audit Laporan Keuangan' => 'C01',
+                'Audit Mutu Internal' => 'C02',
+                'Kepuasan Mahasiswa' => 'C03',
+                'Kepuasan Pengguna' => 'C04',
+                'Kepuasan Tendik' => 'C05',
+                'VMTS' => 'C06',
+                'Monitoring' => 'C07',
+                'Tinjauan Kurikulum' => 'C08',
+                'Sarana' => 'C09',
+                'Evaluasi Kerjasama' => 'C10',
+                'Laporan LPPM' => 'C11',
+                'PMB' => 'C12',
+                'PKKMB' => 'C13',
+                'Pembukaan Tabung' => 'C14',
+                'RTM' => 'C15',
+                'RTL' => 'C16',
+            ],
+            'D' => [
+                'Wakil Ketua' => 'D02',
+                'Ketua STIE' => 'D01',
+                'Ketua Prodi Manajemen' => 'D03',
+                'Ketua Prodi Akuntansi' => 'D04',
+                'Ketua LPPM' => 'D05',
+            ],
+            'E' => [
+                'Akreditasi Manajemen' => 'E01',
+                'Akreditasi Akuntansi' => 'E02',
+            ],
+            'F' => [
+                'Non Akademik' => 'F02',
+                'Pedoman Akademik' => 'F01',
+            ],
+            'G' => ['Satgas PPKPT' => 'G01'],
+            'H' => [
+                'Tracer Study' => 'H01',
+                'Buku Wisuda' => 'H02',
+            ],
+            'I' => [
+                'Dunia Usaha' => 'I01',
+                'Lembaga Pendidikan' => 'I02',
+            ],
+            'J' => [
+                'Materi' => 'J01',
+                'Video' => 'J02',
+            ],
+            default => [],
         };
+
+        foreach ($map as $needle => $code) {
+            if (stripos($name, $needle) !== false) {
+                return $code;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -449,7 +510,7 @@ class ImportWordpressLegacyContent extends Command
 
         foreach ($catalog as $item) {
             $code = $this->categoryCodeFor($item['wp_category_parent_name'], $item['wp_category_name']);
-            $sub = $this->subcategoryCodeFor($item['wp_category_name']);
+            $sub = $this->subcategoryCodeFor($item['wp_category_name'], $code);
             $byCategory[$code] = ($byCategory[$code] ?? 0) + 1;
             if ($sub === null) {
                 $missingSubcat++;
@@ -465,7 +526,7 @@ class ImportWordpressLegacyContent extends Command
         $this->info("\nSample of 10 extracted documents:");
         foreach (array_slice($catalog, 0, 10) as $item) {
             $code = $this->categoryCodeFor($item['wp_category_parent_name'], $item['wp_category_name']);
-            $sub = $this->subcategoryCodeFor($item['wp_category_name']) ?? '-';
+            $sub = $this->subcategoryCodeFor($item['wp_category_name'], $code) ?? '-';
             $unit = $this->unitCodeFor($item['wp_category_parent_name'], $item['wp_category_name']);
             $this->line("  [$code/$sub/$unit] ({$item['year']}) {$item['title']}");
         }
@@ -571,7 +632,7 @@ class ImportWordpressLegacyContent extends Command
                 $categoryCode = $this->categoryCodeFor($item['wp_category_parent_name'], $item['wp_category_name']);
                 $category = DocumentCategory::where('code', $categoryCode)->firstOrFail();
 
-                $subcategoryCode = $this->subcategoryCodeFor($item['wp_category_name']);
+                $subcategoryCode = $this->subcategoryCodeFor($item['wp_category_name'], $categoryCode);
                 $subcategory = $subcategoryCode
                     ? DocumentSubcategory::where('document_category_id', $category->id)->where('code', $subcategoryCode)->first()
                     : null;
