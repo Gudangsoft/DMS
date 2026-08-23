@@ -7,6 +7,17 @@
         'linear-gradient(135deg, #0b2545 0%, #3b5b8c 100%)',
         'linear-gradient(135deg, #071a33 0%, #0b2545 60%, #d4af37 140%)',
     ];
+
+    // "J02. Video" only ever holds YouTube links on the old site, never
+    // downloadable files — this subcategory is expected to always be empty
+    // here. Point visitors at the actual video page instead of leaving them
+    // looking at an unexplained "no documents" state.
+    $activeSubcategory = $categoriesTree
+        ->flatMap(fn ($cat) => $cat->subcategories)
+        ->firstWhere('id', request()->integer('subcategory'));
+    $videoPage = $activeSubcategory?->code === 'J02'
+        ? \App\Models\Page::where('slug', 'wp-video-materi-pelatihan')->where('is_published', true)->first()
+        : null;
 @endphp
 
 @section('content')
@@ -174,8 +185,19 @@
                     </a>
                 @empty
                     <div class="rounded-xl bg-white py-12 text-center shadow-sm ring-1 ring-gray-950/5">
-                        <x-heroicon-o-document-magnifying-glass class="mx-auto h-10 w-10 text-gray-300" />
-                        <p class="mt-3 text-sm text-gray-500">Tidak ada dokumen yang ditemukan.</p>
+                        @if ($videoPage)
+                            <x-heroicon-o-play-circle class="mx-auto h-10 w-10 text-gray-300" />
+                            <p class="mt-3 text-sm text-gray-500">
+                                Materi kategori ini berupa video, bukan dokumen yang dapat diunduh.
+                            </p>
+                            <a href="{{ route('pages.show', $videoPage) }}"
+                                class="mt-4 inline-flex items-center gap-1.5 rounded-md bg-brand-navy px-4 py-2 text-sm font-semibold text-white hover:bg-brand-navy-light">
+                                <x-heroicon-o-play class="h-4 w-4" /> Lihat Video Materi Pelatihan
+                            </a>
+                        @else
+                            <x-heroicon-o-document-magnifying-glass class="mx-auto h-10 w-10 text-gray-300" />
+                            <p class="mt-3 text-sm text-gray-500">Tidak ada dokumen yang ditemukan.</p>
+                        @endif
                     </div>
                 @endforelse
             </div>
