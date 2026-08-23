@@ -30,8 +30,17 @@ return [
 
     'disks' => [
 
+        // 'local_no_finfo' (registered in AppServiceProvider) instead of the
+        // stock 'local' driver on every local disk below: Flysystem's Local
+        // adapter builds a Finfo-backed mime detector in its constructor
+        // unconditionally, so on a host without ext-fileinfo even a Livewire
+        // temp file upload crashes before this app's own code runs. See the
+        // comment on Storage::extend('local_no_finfo', ...) for the full
+        // reasoning — this app already trusts a known file-extension
+        // allowlist over content-sniffed mime types anyway.
         'local' => [
-            'driver' => 'local',
+            'driver' => 'local_no_finfo',
+            '_disk_name' => 'local',
             'root' => storage_path('app/private'),
             'serve' => true,
             'throw' => false,
@@ -42,7 +51,8 @@ return [
         // Laravel's built-in local-disk route — the only way to reach a file is
         // through SecureDownloadController, which enforces DocumentPolicy first.
         'documents' => [
-            'driver' => 'local',
+            'driver' => 'local_no_finfo',
+            '_disk_name' => 'documents',
             'root' => storage_path('app/private/documents'),
             'serve' => false,
             'throw' => false,
@@ -50,7 +60,8 @@ return [
         ],
 
         'public' => [
-            'driver' => 'local',
+            'driver' => 'local_no_finfo',
+            '_disk_name' => 'public',
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
