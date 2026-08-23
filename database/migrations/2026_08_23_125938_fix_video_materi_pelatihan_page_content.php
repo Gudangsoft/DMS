@@ -75,12 +75,47 @@ return new class extends Migration
         foreach ($videos as $v) {
             $title = e($v['title']);
             $desc = e($v['desc']);
-            $embedUrl = 'https://www.youtube.com/embed/'.e($v['youtube_id']);
+
+            // A dead/removed YouTube video still embeds "successfully" — the
+            // iframe just renders YouTube's own bare "Video unavailable"
+            // error inside it, which looks broken and out of place next to
+            // this app's styling. Checking oEmbed first (this is the same
+            // public, keyless endpoint YouTube's oEmbed spec exposes — no
+            // API key needed) means a dead video gets this app's own graceful
+            // placeholder instead of YouTube's ugly default.
+            $isAvailable = Http::timeout(10)->get('https://www.youtube.com/oembed', [
+                'url' => 'https://www.youtube.com/watch?v='.$v['youtube_id'],
+                'format' => 'json',
+            ])->successful();
+
+            if ($isAvailable) {
+                $embedUrl = 'https://www.youtube.com/embed/'.e($v['youtube_id']);
+                $media = <<<HTML
+                    <iframe src="{$embedUrl}" title="{$title}" class="h-full w-full" loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    HTML;
+            } else {
+                // Inline styles, not Tailwind utility classes: this HTML is
+                // injected into the page at runtime from the database, not
+                // present in any Blade/JS file Tailwind's build scans — a
+                // class with no matching rule elsewhere in the compiled
+                // stylesheet (e.g. a gradient "to-*" color never used
+                // literally anywhere else) silently has zero effect, and the
+                // box renders blank instead of just unstyled.
+                $media = <<<HTML
+                    <div style="display:flex;height:100%;width:100%;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;background:linear-gradient(135deg,#0b2545,#13315c);padding:0 1rem;text-align:center;color:rgba(255,255,255,0.85);">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="height:2rem;width:2rem;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        <p style="font-size:0.75rem;font-weight:500;margin:0;">Video ini sudah tidak tersedia di YouTube</p>
+                    </div>
+                    HTML;
+            }
+
             $cards .= <<<HTML
                 <div class="not-prose overflow-hidden rounded-lg border border-gray-200">
                     <div class="aspect-video w-full">
-                        <iframe src="{$embedUrl}" title="{$title}" class="h-full w-full" loading="lazy"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        {$media}
                     </div>
                     <div class="p-4">
                         <h4 class="text-sm font-semibold uppercase text-brand-navy">{$title}</h4>
