@@ -23,10 +23,6 @@ class DocumentStatsOverview extends StatsOverviewWidget
             Stat::make('Total Dokumen', $withArchived()->count())
                 ->icon('heroicon-o-document-duplicate')
                 ->color('gray'),
-            Stat::make('Dokumen Aktif', Document::count())
-                ->description('Belum diarsipkan')
-                ->icon('heroicon-o-document-check')
-                ->color('info'),
             Stat::make('Draft', Document::where('status', 'draft')->count())
                 ->icon('heroicon-o-pencil')
                 ->color('gray'),

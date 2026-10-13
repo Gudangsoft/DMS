@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Poin 21 sidebar tabs: Semua Dokumen, Dokumen Saya, Draft, Pending Approval,
- * Approved, Published, Rejected, Archived.
+ * Approved, Published, Rejected. (Tab Archived dihapus — dokumen terhapus
+ * tetap bisa dilihat lewat filter "Trashed" di tabel.)
  */
 class ListDocuments extends ListRecords
 {
@@ -39,8 +40,6 @@ class ListDocuments extends ListRecords
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'published')),
             'rejected' => Tab::make('Rejected')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'rejected')),
-            'archived' => Tab::make('Archived')
-                ->modifyQueryUsing(fn (Builder $query) => $query->onlyTrashed()),
         ];
     }
 }
