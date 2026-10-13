@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\DocumentApprovalService;
 use App\Services\DocumentService;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -88,106 +89,113 @@ class DocumentsTable
                 // clicking one out of order would hit the service layer's own guard
                 // and throw instead of doing anything — status checks are duplicated
                 // here so the buttons shown are always ones that will actually work.
+                // Edit is the exception: DocumentPolicy::update() itself lets admins
+                // edit at any status, and the service layer honours the same rule.
                 EditAction::make()
-                    ->visible(fn ($record) => $record->status->isEditable() && auth()->user()->can('update', $record)),
+                    ->visible(fn ($record) => auth()->user()->can('update', $record)),
 
-                Action::make('submit')
-                    ->label('Submit')
-                    ->icon('heroicon-m-paper-airplane')
-                    ->color('info')
-                    ->visible(fn ($record) => in_array($record->status, [DocumentStatus::Draft, DocumentStatus::Revision], true)
-                        && auth()->user()->can('submit', $record))
-                    ->requiresConfirmation()
-                    ->schema([
-                        Select::make('reviewer_id')
-                            ->label('Reviewer')
-                            ->options(fn () => User::role(\App\Enums\UserRole::Reviewer->value)->pluck('name', 'id'))
-                            ->helperText('Kosongkan untuk penugasan otomatis berdasarkan unit.')
-                            ->searchable(),
-                    ])
-                    ->action(function ($record, array $data) {
-                        app(DocumentApprovalService::class)->submitForReview($record, auth()->user(), $data['reviewer_id'] ?? null);
-                        Notification::make()->title('Dokumen disubmit untuk review')->success()->send();
-                    }),
+                // Workflow actions live in a "⋮" dropdown so View/Edit stay visible
+                // at the row's edge instead of being pushed off-screen by up to
+                // eight inline buttons.
+                ActionGroup::make([
+                    Action::make('submit')
+                        ->label('Submit')
+                        ->icon('heroicon-m-paper-airplane')
+                        ->color('info')
+                        ->visible(fn ($record) => in_array($record->status, [DocumentStatus::Draft, DocumentStatus::Revision], true)
+                            && auth()->user()->can('submit', $record))
+                        ->requiresConfirmation()
+                        ->schema([
+                            Select::make('reviewer_id')
+                                ->label('Reviewer')
+                                ->options(fn () => User::role(\App\Enums\UserRole::Reviewer->value)->pluck('name', 'id'))
+                                ->helperText('Kosongkan untuk penugasan otomatis berdasarkan unit.')
+                                ->searchable(),
+                        ])
+                        ->action(function ($record, array $data) {
+                            app(DocumentApprovalService::class)->submitForReview($record, auth()->user(), $data['reviewer_id'] ?? null);
+                            Notification::make()->title('Dokumen disubmit untuk review')->success()->send();
+                        }),
 
-                Action::make('approve')
-                    ->label('Approve')
-                    ->icon('heroicon-m-check-circle')
-                    ->color('success')
-                    ->visible(fn ($record) => $record->status === DocumentStatus::UnderReview && auth()->user()->can('approve', $record))
-                    ->requiresConfirmation()
-                    ->schema([
-                        Textarea::make('comments')->label('Komentar (opsional)'),
-                    ])
-                    ->action(function ($record, array $data) {
-                        $approval = $record->approvals()->where('status', 'pending')->latest()->first();
-                        abort_if(! $approval, 404);
-                        app(DocumentApprovalService::class)->approve($approval, auth()->user(), $data['comments'] ?? null);
-                        Notification::make()->title('Dokumen disetujui')->success()->send();
-                    }),
+                    Action::make('approve')
+                        ->label('Approve')
+                        ->icon('heroicon-m-check-circle')
+                        ->color('success')
+                        ->visible(fn ($record) => $record->status === DocumentStatus::UnderReview && auth()->user()->can('approve', $record))
+                        ->requiresConfirmation()
+                        ->schema([
+                            Textarea::make('comments')->label('Komentar (opsional)'),
+                        ])
+                        ->action(function ($record, array $data) {
+                            $approval = $record->approvals()->where('status', 'pending')->latest()->first();
+                            abort_if(! $approval, 404);
+                            app(DocumentApprovalService::class)->approve($approval, auth()->user(), $data['comments'] ?? null);
+                            Notification::make()->title('Dokumen disetujui')->success()->send();
+                        }),
 
-                Action::make('request_revision')
-                    ->label('Minta Revisi')
-                    ->icon('heroicon-m-arrow-uturn-left')
-                    ->color('warning')
-                    ->visible(fn ($record) => $record->status === DocumentStatus::UnderReview && auth()->user()->can('requestRevision', $record))
-                    ->schema([
-                        Textarea::make('comments')->label('Catatan Revisi')->required(),
-                    ])
-                    ->action(function ($record, array $data) {
-                        $approval = $record->approvals()->where('status', 'pending')->latest()->first();
-                        abort_if(! $approval, 404);
-                        app(DocumentApprovalService::class)->requestRevision($approval, auth()->user(), $data['comments']);
-                        Notification::make()->title('Revisi diminta')->warning()->send();
-                    }),
+                    Action::make('request_revision')
+                        ->label('Minta Revisi')
+                        ->icon('heroicon-m-arrow-uturn-left')
+                        ->color('warning')
+                        ->visible(fn ($record) => $record->status === DocumentStatus::UnderReview && auth()->user()->can('requestRevision', $record))
+                        ->schema([
+                            Textarea::make('comments')->label('Catatan Revisi')->required(),
+                        ])
+                        ->action(function ($record, array $data) {
+                            $approval = $record->approvals()->where('status', 'pending')->latest()->first();
+                            abort_if(! $approval, 404);
+                            app(DocumentApprovalService::class)->requestRevision($approval, auth()->user(), $data['comments']);
+                            Notification::make()->title('Revisi diminta')->warning()->send();
+                        }),
 
-                Action::make('reject')
-                    ->label('Reject')
-                    ->icon('heroicon-m-x-circle')
-                    ->color('danger')
-                    ->visible(fn ($record) => $record->status === DocumentStatus::UnderReview && auth()->user()->can('reject', $record))
-                    ->requiresConfirmation()
-                    ->schema([
-                        Textarea::make('comments')->label('Alasan Penolakan')->required(),
-                    ])
-                    ->action(function ($record, array $data) {
-                        $approval = $record->approvals()->where('status', 'pending')->latest()->first();
-                        abort_if(! $approval, 404);
-                        app(DocumentApprovalService::class)->reject($approval, auth()->user(), $data['comments']);
-                        Notification::make()->title('Dokumen ditolak')->danger()->send();
-                    }),
+                    Action::make('reject')
+                        ->label('Reject')
+                        ->icon('heroicon-m-x-circle')
+                        ->color('danger')
+                        ->visible(fn ($record) => $record->status === DocumentStatus::UnderReview && auth()->user()->can('reject', $record))
+                        ->requiresConfirmation()
+                        ->schema([
+                            Textarea::make('comments')->label('Alasan Penolakan')->required(),
+                        ])
+                        ->action(function ($record, array $data) {
+                            $approval = $record->approvals()->where('status', 'pending')->latest()->first();
+                            abort_if(! $approval, 404);
+                            app(DocumentApprovalService::class)->reject($approval, auth()->user(), $data['comments']);
+                            Notification::make()->title('Dokumen ditolak')->danger()->send();
+                        }),
 
-                Action::make('publish')
-                    ->label('Publish')
-                    ->icon('heroicon-m-globe-alt')
-                    ->color('success')
-                    ->visible(fn ($record) => $record->status === DocumentStatus::Approved && auth()->user()->can('publish', $record))
-                    ->requiresConfirmation()
-                    ->action(function ($record) {
-                        app(DocumentService::class)->publish($record);
-                        Notification::make()->title('Dokumen dipublikasikan')->success()->send();
-                    }),
+                    Action::make('publish')
+                        ->label('Publish')
+                        ->icon('heroicon-m-globe-alt')
+                        ->color('success')
+                        ->visible(fn ($record) => $record->status === DocumentStatus::Approved && auth()->user()->can('publish', $record))
+                        ->requiresConfirmation()
+                        ->action(function ($record) {
+                            app(DocumentService::class)->publish($record);
+                            Notification::make()->title('Dokumen dipublikasikan')->success()->send();
+                        }),
 
-                Action::make('archive')
-                    ->label('Archive')
-                    ->icon('heroicon-m-archive-box')
-                    ->color('gray')
-                    ->visible(fn ($record) => auth()->user()->can('archive', $record))
-                    ->requiresConfirmation()
-                    ->action(function ($record) {
-                        app(DocumentService::class)->archive($record);
-                        Notification::make()->title('Dokumen diarsipkan')->success()->send();
-                    }),
+                    Action::make('archive')
+                        ->label('Archive')
+                        ->icon('heroicon-m-archive-box')
+                        ->color('gray')
+                        ->visible(fn ($record) => auth()->user()->can('archive', $record))
+                        ->requiresConfirmation()
+                        ->action(function ($record) {
+                            app(DocumentService::class)->archive($record);
+                            Notification::make()->title('Dokumen diarsipkan')->success()->send();
+                        }),
 
-                Action::make('download')
-                    ->label('Download')
-                    ->icon('heroicon-m-arrow-down-tray')
-                    ->color('gray')
-                    ->visible(fn ($record) => auth()->user()->can('download', $record))
-                    ->url(fn ($record) => route('documents.download', $record->uuid))
-                    ->openUrlInNewTab(),
+                    Action::make('download')
+                        ->label('Download')
+                        ->icon('heroicon-m-arrow-down-tray')
+                        ->color('gray')
+                        ->visible(fn ($record) => auth()->user()->can('download', $record))
+                        ->url(fn ($record) => route('documents.download', $record->uuid))
+                        ->openUrlInNewTab(),
 
-                RestoreAction::make(),
+                    RestoreAction::make(),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

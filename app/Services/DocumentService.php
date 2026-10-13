@@ -53,7 +53,7 @@ class DocumentService
      */
     public function updateWithNewFile(Document $document, array $data, UploadedFile|string|null $source, User $actor, ?string $changeNotes = null): Document
     {
-        if (! $document->status->isEditable()) {
+        if (! $document->status->isEditable() && ! $actor->can('update', $document)) {
             throw new RuntimeException('Dokumen dengan status ini tidak dapat diedit langsung.');
         }
 

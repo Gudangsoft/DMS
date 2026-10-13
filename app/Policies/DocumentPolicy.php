@@ -84,14 +84,18 @@ class DocumentPolicy
     /**
      * Poin 39: draft hanya diedit owner/admin; submitted tidak boleh diedit sampai
      * reviewer minta revisi; approved tidak boleh diubah langsung.
+     *
+     * Exception: admins (documents.update) may correct a document at any status —
+     * e.g. imported WordPress documents that arrive already Published. Owners
+     * without that permission stay limited to the Draft/Revision window.
      */
     public function update(User $user, Document $document): bool
     {
-        if (! $document->status->isEditable()) {
-            return false;
+        if ($user->can('documents.update')) {
+            return true;
         }
 
-        return $user->id === $document->owner_id || $user->can('documents.update');
+        return $document->status->isEditable() && $user->id === $document->owner_id;
     }
 
     public function delete(User $user, Document $document): bool

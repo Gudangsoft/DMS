@@ -153,7 +153,7 @@ class DocumentTableActionsTest extends TestCase
 
         Livewire::test(ListDocuments::class)
             ->assertTableActionHidden('submit', $this->document->fresh())
-            ->assertTableActionHidden('edit', $this->document->fresh())
+            ->assertTableActionVisible('edit', $this->document->fresh())
             ->assertTableActionVisible('approve', $this->document->fresh())
             ->assertTableActionVisible('request_revision', $this->document->fresh())
             ->assertTableActionVisible('reject', $this->document->fresh())
@@ -174,7 +174,7 @@ class DocumentTableActionsTest extends TestCase
             ->assertTableActionHidden('approve', $this->document->fresh());
     }
 
-    public function test_super_admin_cannot_see_submit_or_edit_on_a_published_document(): void
+    public function test_super_admin_sees_edit_but_not_submit_on_a_published_document(): void
     {
         app(DocumentApprovalService::class)->submitForReview($this->document, $this->admin, $this->reviewer->id);
         $approval = $this->document->approvals()->latest()->first();
@@ -185,7 +185,7 @@ class DocumentTableActionsTest extends TestCase
 
         Livewire::test(ListDocuments::class)
             ->assertTableActionHidden('submit', $this->document->fresh())
-            ->assertTableActionHidden('edit', $this->document->fresh())
+            ->assertTableActionVisible('edit', $this->document->fresh())
             ->assertTableActionHidden('publish', $this->document->fresh());
     }
 }

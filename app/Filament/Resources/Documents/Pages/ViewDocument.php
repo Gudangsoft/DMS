@@ -13,12 +13,10 @@ class ViewDocument extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            // Gate::before gives Super Admin a blanket `true` on every ability check,
-            // bypassing DocumentPolicy::update()'s status guard — without also
-            // checking isEditable() here, Super Admin would see Edit on a
-            // Published/Archived document and saving would throw in the service layer.
+            // DocumentPolicy::update() lets admins edit at any status and owners
+            // only during Draft/Revision; the service layer enforces the same rule.
             EditAction::make()
-                ->visible(fn ($record) => $record->status->isEditable()),
+                ->visible(fn ($record) => auth()->user()->can('update', $record)),
         ];
     }
 }

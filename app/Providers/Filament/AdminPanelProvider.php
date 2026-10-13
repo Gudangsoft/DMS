@@ -69,6 +69,9 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->profile(EditProfile::class, isSimple: false)
             ->databaseNotifications()
+            // Lets admins shrink the sidebar to icons (toggle beside the logo) so
+            // wide forms and tables get the full page width.
+            ->sidebarCollapsibleOnDesktop()
             // Panel-wide default: every resource's Create/Edit form goes back to
             // the list after saving, instead of Filament's default of staying on
             // the same form — matches how admins actually expect this to behave,
