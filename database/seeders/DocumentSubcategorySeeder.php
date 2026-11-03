@@ -4,10 +4,13 @@ namespace Database\Seeders;
 
 use App\Models\DocumentCategory;
 use App\Models\DocumentSubcategory;
+use Database\Seeders\Concerns\MembacaDataInstansi;
 use Illuminate\Database\Seeder;
 
 class DocumentSubcategorySeeder extends Seeder
 {
+    use MembacaDataInstansi;
+
     /**
      * Run the database seeds.
      */
@@ -40,7 +43,7 @@ class DocumentSubcategorySeeder extends Seeder
                 ['code' => 'C03', 'name' => 'Laporan Hasil Kepuasan Mahasiswa'],
                 ['code' => 'C04', 'name' => 'Laporan Hasil Kepuasan Pengguna'],
                 ['code' => 'C05', 'name' => 'Laporan Hasil Kepuasan Tendik dan Tependik'],
-                ['code' => 'C06', 'name' => 'Laporan Hasil VMTS STIE Kasih Bangsa'],
+                ['code' => 'C06', 'name' => 'Laporan Hasil VMTS {nama_institusi}'],
                 ['code' => 'C07', 'name' => 'Monitoring & Evaluasi Pendidikan'],
                 ['code' => 'C08', 'name' => 'Laporan Tinjauan Kurikulum'],
                 ['code' => 'C09', 'name' => 'Sarana & Prasarana'],
@@ -53,7 +56,7 @@ class DocumentSubcategorySeeder extends Seeder
                 ['code' => 'C16', 'name' => 'Laporan RTL'],
             ],
             'D' => [
-                ['code' => 'D01', 'name' => 'SK Ketua STIE Kasih Bangsa'],
+                ['code' => 'D01', 'name' => 'SK Ketua {nama_institusi}'],
                 ['code' => 'D02', 'name' => 'SK Wakil Ketua'],
                 ['code' => 'D03', 'name' => 'SK Ketua Prodi Manajemen'],
                 ['code' => 'D04', 'name' => 'SK Ketua Prodi Akuntansi'],
@@ -62,7 +65,7 @@ class DocumentSubcategorySeeder extends Seeder
             'E' => [
                 ['code' => 'E01', 'name' => 'Akreditasi Program Studi Manajemen'],
                 ['code' => 'E02', 'name' => 'Akreditasi Program Studi Akuntansi'],
-                ['code' => 'E03', 'name' => 'Akreditasi Institusi STIE Kasih Bangsa'],
+                ['code' => 'E03', 'name' => 'Akreditasi Institusi {nama_institusi}'],
             ],
             'F' => [
                 ['code' => 'F01', 'name' => 'Pedoman Akademik'],
@@ -97,7 +100,7 @@ class DocumentSubcategorySeeder extends Seeder
                     ['code' => $item['code']],
                     [
                         'document_category_id' => $category->id,
-                        'name' => $item['name'],
+                        'name' => $this->isiPlaceholder($item['name']),
                         'sort_order' => $sortOrder + 1,
                         'is_active' => true,
                     ]

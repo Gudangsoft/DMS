@@ -17,11 +17,14 @@ use Illuminate\Support\Facades\Http;
  */
 return new class extends Migration
 {
-    protected string $sourceUrl = 'https://dms.stiekasihbangsa.ac.id/wp-json/wp/v2/posts?slug=video-materi-pelatihan&_fields=content';
-
     public function up(): void
     {
-        $response = Http::timeout(30)->get($this->sourceUrl);
+        $legacyUrl = config('services.legacy_wordpress.url');
+        if (! $legacyUrl) {
+            return;
+        }
+
+        $response = Http::timeout(30)->get($legacyUrl.'/wp-json/wp/v2/posts?slug=video-materi-pelatihan&_fields=content');
         if ($response->failed() || empty($response->json())) {
             return;
         }

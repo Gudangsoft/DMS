@@ -30,11 +30,13 @@ use Illuminate\Support\Facades\Http;
  */
 class RestructureDocumentCategoriesToWordpress extends Command
 {
-    protected $signature = 'wp:restructure-categories {--dry-run : Preview the remap without writing anything}';
+    protected $signature = 'wp:restructure-categories
+        {--dry-run : Preview the remap without writing anything}
+        {--url= : Old WordPress site URL (default: LEGACY_WORDPRESS_URL)}';
 
     protected $description = 'Move documents from the old 5-category taxonomy to the WordPress-matching 10-category (A-J) taxonomy';
 
-    protected string $baseUrl = 'https://dms.stiekasihbangsa.ac.id';
+    protected string $baseUrl = '';
 
     /** @var array<int, array<string, mixed>> */
     protected array $categoriesById = [];
@@ -51,6 +53,13 @@ class RestructureDocumentCategoriesToWordpress extends Command
 
     public function handle(): int
     {
+        $this->baseUrl = rtrim((string) ($this->option('url') ?: config('services.legacy_wordpress.url')), '/');
+        if ($this->baseUrl === '') {
+            $this->error('Isi --url atau LEGACY_WORDPRESS_URL dengan alamat situs WordPress lama.');
+
+            return self::FAILURE;
+        }
+
         ini_set('memory_limit', '512M');
         DB::disableQueryLog();
 

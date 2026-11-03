@@ -1,3 +1,4 @@
+@php([$primer, $aksen] = [\App\Support\Tema::primer(), \App\Support\Tema::aksen()])
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,18 +6,18 @@
     <title>Laporan {{ \App\Models\Setting::get('site_name', 'DMS') }}</title>
     <style>
         body { font-family: sans-serif; font-size: 11px; color: #1f2937; }
-        h1 { font-size: 16px; color: #0b2545; margin-bottom: 0; }
+        h1 { font-size: 16px; color: {{ $primer }}; margin-bottom: 0; }
         p.subtitle { color: #6b7280; margin-top: 2px; }
-        h2 { font-size: 13px; color: #0b2545; border-bottom: 2px solid #d4af37; padding-bottom: 4px; margin-top: 24px; }
+        h2 { font-size: 13px; color: {{ $primer }}; border-bottom: 2px solid {{ $aksen }}; padding-bottom: 4px; margin-top: 24px; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         th, td { border: 1px solid #e5e7eb; padding: 5px 8px; text-align: left; }
-        th { background-color: #0b2545; color: #fff; }
+        th { background-color: {{ $primer }}; color: #fff; }
         tr:nth-child(even) { background-color: #f9fafb; }
     </style>
 </head>
 <body>
     <h1>Laporan {{ \App\Models\Setting::get('site_name', 'Document Management System') }}</h1>
-    <p class="subtitle">{{ \App\Models\Setting::get('site_tagline', 'STIE Kasih Bangsa') }} &middot; Dicetak {{ now()->translatedFormat('d F Y H:i') }}</p>
+    <p class="subtitle">{{ \App\Models\Setting::get('site_tagline', '') }} &middot; Dicetak {{ now()->translatedFormat('d F Y H:i') }}</p>
 
     <h2>Ringkasan Status</h2>
     <table>

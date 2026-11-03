@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            // Pengaturan lebih dulu: seeder konten memakai {nama_institusi} dari site_tagline.
+            SettingSeeder::class,
             PermissionSeeder::class,
             RoleSeeder::class,
             UnitSeeder::class,
@@ -21,7 +23,6 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             PageSeeder::class,
             SliderSeeder::class,
-            SettingSeeder::class,
             MenuItemSeeder::class,
         ]);
     }

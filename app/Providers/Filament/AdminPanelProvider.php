@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login;
 use App\Models\Setting;
+use App\Support\Tema;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -36,7 +37,7 @@ class AdminPanelProvider extends PanelProvider
             // request instead of being baked in once at boot — same source of
             // truth as the public site's header/footer (poin: "Pengaturan Web"
             // berlaku di seluruh sistem, bukan hanya frontend publik).
-            ->brandName(fn () => Setting::get('site_name', 'DMS Kasih Bangsa'))
+            ->brandName(fn () => Setting::get('site_name', 'Document Management System'))
             // Filament's <x-filament::logo> only ever renders ONE of
             // {image, brand name text} — as soon as brandLogo() resolves to
             // something, the brand name text is dropped entirely. To show the
@@ -44,7 +45,7 @@ class AdminPanelProvider extends PanelProvider
             // the combined markup (it accepts Htmlable, not just an image URL).
             ->brandLogo(function () {
                 $logo = Setting::get('site_logo');
-                $name = e(Setting::get('site_name', 'DMS Kasih Bangsa'));
+                $name = e(Setting::get('site_name', 'Document Management System'));
 
                 if (! $logo) {
                     return null;
@@ -78,10 +79,10 @@ class AdminPanelProvider extends PanelProvider
             // and covers every resource without needing a per-page override.
             ->resourceCreatePageRedirect('index')
             ->resourceEditPageRedirect('index')
-            ->colors([
-                'primary' => Color::hex('#0B2545'),
+            ->colors(fn () => [
+                'primary' => Color::hex(Tema::primer()),
                 'gray' => Color::Slate,
-                'warning' => Color::hex('#D4AF37'),
+                'warning' => Color::hex(Tema::aksen()),
             ])
             // A single "Kembali" button registered here applies to every resource's
             // list/create/edit/view page panel-wide, instead of adding a header

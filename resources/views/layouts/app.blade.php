@@ -4,7 +4,7 @@
     $settings = \App\Models\Setting::query()->pluck('value', 'key');
     $isHome = request()->routeIs('home');
     $siteName = $settings->get('site_name', 'Document Management System');
-    $siteTagline = $settings->get('site_tagline', 'STIE Kasih Bangsa');
+    $siteTagline = $settings->get('site_tagline', '');
     $siteLogo = $settings->get('site_logo');
     $headerMenu = \App\Models\MenuItem::tree('header')->get();
     $footerMenu = \App\Models\MenuItem::tree('footer')->get();
@@ -12,30 +12,15 @@
 
     // Admin-configurable template colors ("Pengaturan Web" → tab "Warna Tema").
     // Defaults match the original hardcoded navy/gold palette, so sites that
-    // haven't touched this setting look exactly as before. The accent color is
-    // applied globally via CSS custom properties (every bg-brand-gold/
-    // text-brand-gold utility already compiles down to var(--color-brand-gold)
-    // in Tailwind v4) rather than one-by-one, since it's used across dozens of
-    // buttons/links/badges throughout the site — header/body/footer are each a
-    // single element, so those are just styled directly.
-    $themeHeaderColor = $settings->get('theme_header_color') ?: '#0b2545';
-    $themeBodyColor = $settings->get('theme_body_color') ?: '#f9fafb';
-    $themeFooterColor = $settings->get('theme_footer_color') ?: '#ffffff';
-    $themeAccentColor = $settings->get('theme_accent_color') ?: '#d4af37';
-    $lightenHex = function (string $hex, float $percent) {
-        $hex = ltrim($hex, '#');
-        if (strlen($hex) === 3) {
-            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
-        }
-        if (strlen($hex) !== 6 || ! ctype_xdigit($hex)) {
-            return '#e8c766';
-        }
-        [$r, $g, $b] = array_map(fn ($channel) => hexdec($channel), str_split($hex, 2));
-        $mix = fn ($channel) => (int) min(255, $channel + ((255 - $channel) * $percent));
-
-        return sprintf('#%02x%02x%02x', $mix($r), $mix($g), $mix($b));
-    };
-    $themeAccentColorLight = $lightenHex($themeAccentColor, 0.25);
+    // haven't touched this setting look exactly as before. Primary/accent are
+    // applied globally via CSS custom properties (partials.tema — every
+    // brand-navy/brand-gold utility compiles down to var(--color-brand-*) in
+    // Tailwind v4); header/body/footer are each a single element, so those are
+    // just styled directly. Values are only used when they're a valid #rrggbb.
+    $warnaValid = fn (string $key, string $default) => \App\Support\Tema::valid($settings->get($key)) ? $settings->get($key) : $default;
+    $themeHeaderColor = $warnaValid('theme_header_color', \App\Support\Tema::primer());
+    $themeBodyColor = $warnaValid('theme_body_color', '#f9fafb');
+    $themeFooterColor = $warnaValid('theme_footer_color', '#ffffff');
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -48,12 +33,7 @@
         <link rel="icon" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($favicon) }}">
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
-        :root {
-            --color-brand-gold: {{ $themeAccentColor }};
-            --color-brand-gold-light: {{ $themeAccentColorLight }};
-        }
-    </style>
+    @include('partials.tema')
 </head>
 <body class="flex min-h-screen flex-col font-sans antialiased" style="background-color: {{ $themeBodyColor }};">
     {{--

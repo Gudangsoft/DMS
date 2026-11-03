@@ -1,3 +1,4 @@
+@php($tema = \App\Support\Tema::variabel())
 {{-- Scoped to App\Filament\Pages\Auth\Login only (see AdminPanelProvider's
      BODY_END render hook scope) — restyles the stock Filament simple-page
      chrome to match the public site's navy/gold branding without touching the
@@ -31,7 +32,7 @@
         position: relative;
         overflow: hidden;
         min-height: 100vh;
-        background: linear-gradient(180deg, #13315c 0%, #0b2545 55%, #071a33 100%) !important;
+        background: linear-gradient(180deg, {{ $tema["--color-brand-navy-light"] }} 0%, {{ $tema["--color-brand-navy"] }} 55%, {{ $tema["--color-brand-navy-dark"] }} 100%) !important;
     }
 
     .fi-simple-layout::before,
@@ -41,7 +42,7 @@
         width: 22rem;
         height: 22rem;
         border-radius: 9999px;
-        background: rgba(212, 175, 55, 0.16);
+        background: color-mix(in srgb, {{ $tema["--color-brand-gold"] }} 16%, transparent);
         filter: blur(90px);
         pointer-events: none;
     }
@@ -82,8 +83,8 @@
     }
 
     .fi-logo:not(:has(img)) {
-        background: linear-gradient(135deg, #d4af37, #e8c766) !important;
-        color: #0b2545 !important;
+        background: linear-gradient(135deg, {{ $tema["--color-brand-gold"] }}, {{ $tema["--color-brand-gold-light"] }}) !important;
+        color: {{ $tema["--color-brand-navy"] }} !important;
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -95,7 +96,7 @@
     /* The header (logo/heading/subheading) renders INSIDE .fi-simple-main, i.e.
        on the white card — not on the navy page background — so text stays dark. */
     .fi-simple-header-heading {
-        color: #0b2545 !important;
+        color: {{ $tema["--color-brand-navy"] }} !important;
         font-size: 1.375rem !important;
         font-weight: 700 !important;
         margin-top: 0.25rem;
@@ -120,7 +121,7 @@
         content: '';
         display: block;
         height: 0.375rem;
-        background: linear-gradient(90deg, #d4af37, #e8c766, #d4af37);
+        background: linear-gradient(90deg, {{ $tema["--color-brand-gold"] }}, {{ $tema["--color-brand-gold-light"] }}, {{ $tema["--color-brand-gold"] }});
     }
 
     html.dark .fi-simple-main {
@@ -128,7 +129,7 @@
     }
 
     html.dark .fi-simple-header-heading {
-        color: #0b2545 !important;
+        color: {{ $tema["--color-brand-navy"] }} !important;
     }
 
     html.dark .fi-simple-header-subheading {

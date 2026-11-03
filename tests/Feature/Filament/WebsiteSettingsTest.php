@@ -52,10 +52,10 @@ class WebsiteSettingsTest extends TestCase
         $this->actingAs($this->admin());
 
         Livewire::test(WebsiteSettings::class)
-            ->fillForm(['site_name' => 'DMS Kasih Bangsa Uji'])
+            ->fillForm(['site_name' => 'DMS Kampus Uji'])
             ->call('save');
 
-        $this->assertSame('DMS Kasih Bangsa Uji', Setting::get('site_name'));
+        $this->assertSame('DMS Kampus Uji', Setting::get('site_name'));
     }
 
     public function test_form_preloads_existing_logo(): void
@@ -76,7 +76,7 @@ class WebsiteSettingsTest extends TestCase
 
         Livewire::test(WebsiteSettings::class)
             ->fillForm([
-                'site_name' => 'DMS Kasih Bangsa Uji',
+                'site_name' => 'DMS Kampus Uji',
                 'theme_header_color' => '#112233',
                 'theme_body_color' => '#eeeeee',
                 'theme_footer_color' => '#f5f5f5',

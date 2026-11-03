@@ -24,6 +24,12 @@ return new class extends Migration
     public function up(): void
     {
         foreach ($this->urlMap as $old => $new) {
+            // Only on installs that actually imported the WordPress pages — elsewhere the
+            // target page doesn't exist and the menu would end up pointing at a 404.
+            if (! DB::table('pages')->where('slug', substr($new, strlen('/page/')))->exists()) {
+                continue;
+            }
+
             DB::table('menu_items')->where('url', $old)->update(['url' => $new, 'updated_at' => now()]);
         }
 

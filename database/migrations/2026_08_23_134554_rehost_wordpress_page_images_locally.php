@@ -10,8 +10,8 @@ use Illuminate\Support\Str;
  * Data fix, not a schema change. wp:import-legacy copied each page's raw HTML
  * verbatim, and a few of them reference banner/header images, one structure-
  * chart <img>, and one <source> video as absolute URLs back on the old
- * WordPress site (e.g. background-image: url(https://dms.stiekasihbangsa.ac.id/wp-content/...),
- * <source src="https://dms.stiekasihbangsa.ac.id/kasih-bangsa.mp4">) rather
+ * WordPress site (e.g. background-image: url(https://<legacy-host>/wp-content/...),
+ * <source src="https://<legacy-host>/video.mp4">) rather
  * than a locally stored file — unlike the 662 documents, which were always
  * downloaded and stored on this app's own disk during import. If the old
  * site is ever taken down, those would silently break. This downloads each
@@ -29,7 +29,11 @@ return new class extends Migration
     {
         $pages = DB::table('pages')->where('slug', 'like', 'wp-%')->get(['id', 'slug', 'content']);
         $cache = []; // old URL => new local URL, so a shared file is only downloaded once
-        $domainPattern = 'dms\.stiekasihbangsa\.ac\.id';
+        $legacyHost = parse_url((string) config('services.legacy_wordpress.url'), PHP_URL_HOST);
+        if (! $legacyHost) {
+            return;
+        }
+        $domainPattern = preg_quote($legacyHost, '/');
 
         foreach ($pages as $page) {
             $urls = [];

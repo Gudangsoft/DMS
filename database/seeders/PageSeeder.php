@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Page;
+use Database\Seeders\Concerns\MembacaDataInstansi;
 use Illuminate\Database\Seeder;
 
 /**
@@ -13,14 +14,16 @@ use Illuminate\Database\Seeder;
  */
 class PageSeeder extends Seeder
 {
+    use MembacaDataInstansi;
+
     public function run(): void
     {
         $pages = [
             [
                 'slug' => 'sambutan-ketua',
-                'title' => 'Sambutan Ketua STIE Kasih Bangsa',
+                'title' => 'Sambutan Ketua {nama_institusi}',
                 'excerpt' => 'Kata sambutan dari pimpinan institusi mengenai pentingnya tata kelola dokumen yang tertib dan transparan.',
-                'content' => "<p>Selamat datang di Document Management System (DMS) STIE Kasih Bangsa.</p>".
+                'content' => "<p>Selamat datang di Document Management System (DMS) {nama_institusi}.</p>".
                     "<p>Sistem ini kami hadirkan sebagai wujud komitmen institusi dalam menjaga tata kelola dokumen ".
                     "secara terpusat, aman, dan mudah ditelusuri — mulai dari dokumen regulasi, statuta, hingga ".
                     "dokumen mutu dan akreditasi.</p>".
@@ -29,7 +32,7 @@ class PageSeeder extends Seeder
             [
                 'slug' => 'tentang-dms',
                 'title' => 'Tentang Document Management System',
-                'excerpt' => 'Penjelasan singkat mengenai tujuan dan cakupan penggunaan DMS di lingkungan STIE Kasih Bangsa.',
+                'excerpt' => 'Penjelasan singkat mengenai tujuan dan cakupan penggunaan DMS di lingkungan {nama_institusi}.',
                 'content' => "<p>Document Management System (DMS) adalah sistem terpusat untuk mengelola seluruh dokumen ".
                     "resmi perguruan tinggi, meliputi dokumen acuan, dokumen mutu, dokumen akademik, dokumen ".
                     "akreditasi, dan dokumen administrasi.</p>".
@@ -40,7 +43,7 @@ class PageSeeder extends Seeder
                 'slug' => 'struktur-organisasi',
                 'title' => 'Struktur Organisasi',
                 'excerpt' => 'Struktur unit kerja yang terlibat dalam pengelolaan dokumen institusi.',
-                'content' => "<p>Pengelolaan dokumen pada DMS STIE Kasih Bangsa melibatkan berbagai unit kerja, di antaranya ".
+                'content' => "<p>Pengelolaan dokumen pada DMS {nama_institusi} melibatkan berbagai unit kerja, di antaranya ".
                     "Rektorat, Lembaga Penjaminan Mutu (LPM), Lembaga Penelitian dan Pengabdian Masyarakat (LPPM), ".
                     "Biro Administrasi Akademik dan Kemahasiswaan (BAAK), serta Biro Administrasi Umum dan Keuangan (BAUK).</p>".
                     "<p>Bagan struktur organisasi lengkap dapat ditambahkan di sini oleh Admin Dokumen.</p>",
@@ -60,12 +63,12 @@ class PageSeeder extends Seeder
         ];
 
         foreach ($pages as $page) {
-            Page::updateOrCreate(
+            Page::firstOrCreate(
                 ['slug' => $page['slug']],
                 [
-                    'title' => $page['title'],
-                    'excerpt' => $page['excerpt'],
-                    'content' => $page['content'],
+                    'title' => $this->isiPlaceholder($page['title']),
+                    'excerpt' => $this->isiPlaceholder($page['excerpt']),
+                    'content' => $this->isiPlaceholder($page['content']),
                     'is_published' => true,
                     'published_at' => now(),
                 ]

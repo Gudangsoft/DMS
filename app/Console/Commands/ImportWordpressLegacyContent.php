@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 /**
- * One-off migration from the old WordPress site (dms.stiekasihbangsa.ac.id)
+ * One-off migration from the institution's old WordPress site (LEGACY_WORDPRESS_URL)
  * into this DMS. The old site modeled each document *category* as a single
  * WP post whose body is an HTML accordion of <a href="...pdf"> links (grouped
  * by year/topic) rather than one post per document — so the real document
@@ -36,11 +36,12 @@ class ImportWordpressLegacyContent extends Command
 {
     protected $signature = 'wp:import-legacy
         {--dry-run : Preview counts and mapping without writing anything}
-        {--limit= : Only process the first N extracted documents (for testing)}';
+        {--limit= : Only process the first N extracted documents (for testing)}
+        {--url= : Old WordPress site URL (default: LEGACY_WORDPRESS_URL)}';
 
     protected $description = 'Import documents and content pages from the old WordPress site into this DMS';
 
-    protected string $baseUrl = 'https://dms.stiekasihbangsa.ac.id';
+    protected string $baseUrl = '';
 
     /** @var array<int, array<string, mixed>> */
     protected array $categoriesById = [];
@@ -51,6 +52,13 @@ class ImportWordpressLegacyContent extends Command
 
     public function handle(): int
     {
+        $this->baseUrl = rtrim((string) ($this->option('url') ?: config('services.legacy_wordpress.url')), '/');
+        if ($this->baseUrl === '') {
+            $this->error('Isi --url atau LEGACY_WORDPRESS_URL dengan alamat situs WordPress lama.');
+
+            return self::FAILURE;
+        }
+
         // Some hosts run CLI with a very tight default memory_limit (seen as
         // low as 128M) — hundreds of sequential HTTP downloads plus Eloquent
         // model churn exhausts that quickly even though each step alone is

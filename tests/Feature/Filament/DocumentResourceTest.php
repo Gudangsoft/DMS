@@ -89,7 +89,7 @@ class DocumentResourceTest extends TestCase
                 'year' => 2025,
                 'confidentiality_level' => 'internal',
                 'source_type' => 'link',
-                'file_url' => 'https://dms.stiekasihbangsa.ac.id/wp-content/uploads/2025/10/Permendiktisaintek-39.pdf',
+                'file_url' => 'https://legacy.example.ac.id/wp-content/uploads/2025/10/Permendiktisaintek-39.pdf',
             ])
             ->call('create')
             ->assertHasNoFormErrors();
@@ -98,7 +98,7 @@ class DocumentResourceTest extends TestCase
         $version = $document->versions()->first();
 
         $this->assertTrue($version->isLink());
-        $this->assertSame('https://dms.stiekasihbangsa.ac.id/wp-content/uploads/2025/10/Permendiktisaintek-39.pdf', $version->external_url);
+        $this->assertSame('https://legacy.example.ac.id/wp-content/uploads/2025/10/Permendiktisaintek-39.pdf', $version->external_url);
         $this->assertNull($version->file_path);
         $this->assertNull($version->checksum);
     }

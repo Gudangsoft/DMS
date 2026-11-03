@@ -2,10 +2,10 @@
 
 @php
     $coverGradients = [
-        'linear-gradient(135deg, #0b2545 0%, #13315c 100%)',
-        'linear-gradient(135deg, #13315c 0%, #d4af37 130%)',
-        'linear-gradient(135deg, #0b2545 0%, #3b5b8c 100%)',
-        'linear-gradient(135deg, #071a33 0%, #0b2545 60%, #d4af37 140%)',
+        'linear-gradient(135deg, var(--color-brand-navy) 0%, var(--color-brand-navy-light) 100%)',
+        'linear-gradient(135deg, var(--color-brand-navy-light) 0%, var(--color-brand-gold) 130%)',
+        'linear-gradient(135deg, var(--color-brand-navy) 0%, color-mix(in srgb, var(--color-brand-navy-light) 75%, white) 100%)',
+        'linear-gradient(135deg, var(--color-brand-navy-dark) 0%, var(--color-brand-navy) 60%, var(--color-brand-gold) 140%)',
     ];
 
     // "J02. Video" only ever holds YouTube links on the old site, never

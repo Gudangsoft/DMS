@@ -5,7 +5,7 @@
     @include('partials.hero-slider', [
         'sliders' => $sliders,
         'compact' => false,
-        'eyebrow' => \App\Models\Setting::get('site_tagline', 'STIE Kasih Bangsa'),
+        'eyebrow' => \App\Models\Setting::get('site_tagline', ''),
         'fallbackTitle' => \App\Models\Setting::get('site_name', 'Document Management System'),
         'fallbackSubtitle' => 'Pusat pengelolaan dokumen resmi perguruan tinggi — regulasi, mutu, akademik, akreditasi, dan administrasi — terstruktur, aman, dan mudah ditelusuri.',
     ])

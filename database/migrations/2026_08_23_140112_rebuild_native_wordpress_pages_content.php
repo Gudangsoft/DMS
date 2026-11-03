@@ -32,13 +32,22 @@ use Illuminate\Support\Str;
  */
 return new class extends Migration
 {
-    protected string $baseUrl = 'https://dms.stiekasihbangsa.ac.id/wp-json/wp/v2/pages';
+    protected string $baseUrl = '';
+
+    protected string $legacyHost = '';
 
     /** @var array<string, string> old URL => local URL, shared across pages */
     protected array $assetCache = [];
 
     public function up(): void
     {
+        $legacyUrl = (string) config('services.legacy_wordpress.url');
+        $this->legacyHost = (string) parse_url($legacyUrl, PHP_URL_HOST);
+        if ($this->legacyHost === '') {
+            return;
+        }
+        $this->baseUrl = $legacyUrl.'/wp-json/wp/v2/pages';
+
         $slugs = [
             'sambutan-ketua-stie-kasih-bangsa',
             'tentang-document-management-system-stie-kasih-bangsa',
@@ -81,7 +90,7 @@ return new class extends Migration
         // (#banner-xxx .bg.bg-loaded { background-image: url(...) }) — grab
         // it via regex before the DOM parse strips <style> tags entirely.
         $heroImageUrl = null;
-        if (preg_match('/background-image:\s*url\(([^)]*dms\.stiekasihbangsa\.ac\.id[^)]*)\)/i', $raw, $m)) {
+        if (preg_match('/background-image:\s*url\(([^)]*'.preg_quote($this->legacyHost, '/').'[^)]*)\)/i', $raw, $m)) {
             $heroImageUrl = trim($m[1], "\"' ");
         }
 
@@ -129,7 +138,7 @@ return new class extends Migration
         foreach ($nodes as $node) {
             if ($node->nodeName === 'img') {
                 $src = $node->getAttribute('src');
-                $local = str_contains($src, 'dms.stiekasihbangsa.ac.id') ? $this->rehost($src) : null;
+                $local = str_contains($src, $this->legacyHost) ? $this->rehost($src) : null;
                 $finalSrc = $local ?? $src;
                 if ($finalSrc === '') {
                     continue;

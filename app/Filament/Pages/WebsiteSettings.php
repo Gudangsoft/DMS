@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use App\Support\Tema;
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
@@ -67,7 +68,8 @@ class WebsiteSettings extends Page implements HasSchemas
                                             ->required()
                                             ->columnSpanFull(),
                                         TextInput::make('site_tagline')
-                                            ->label('Tagline')
+                                            ->label('Nama Institusi / Tagline')
+                                            ->helperText('Tampil di header, beranda, laporan PDF, dan teks bawaan halaman.')
                                             ->columnSpanFull(),
                                         FileUpload::make('site_logo')
                                             ->label('Logo')
@@ -102,19 +104,28 @@ class WebsiteSettings extends Page implements HasSchemas
                         Tab::make('Warna Tema')
                             ->schema([
                                 Section::make()
-                                    ->description('Mengatur warna latar header (navbar), body (latar halaman), dan footer di website publik. Kosongkan untuk memakai warna bawaan (navy & emas).')
+                                    ->description('Mengatur warna utama & aksen (website publik, panel admin, dan laporan PDF) serta latar header, body, dan footer website publik. Kosongkan untuk memakai warna bawaan (navy & emas).')
                                     ->columns(2)
                                     ->components([
+                                        ColorPicker::make('theme_primary_color')
+                                            ->regex(Tema::HEX_REGEX)
+                                            ->label('Warna Utama')
+                                            ->default(Tema::PRIMER)
+                                            ->helperText('Tombol, judul, dan sidebar admin.'),
                                         ColorPicker::make('theme_header_color')
+                                            ->regex(Tema::HEX_REGEX)
                                             ->label('Warna Header')
                                             ->default('#0b2545'),
                                         ColorPicker::make('theme_body_color')
+                                            ->regex(Tema::HEX_REGEX)
                                             ->label('Warna Body (Latar Halaman)')
                                             ->default('#f9fafb'),
                                         ColorPicker::make('theme_footer_color')
+                                            ->regex(Tema::HEX_REGEX)
                                             ->label('Warna Footer')
                                             ->default('#ffffff'),
                                         ColorPicker::make('theme_accent_color')
+                                            ->regex(Tema::HEX_REGEX)
                                             ->label('Warna Aksen (Tombol & Sorotan)')
                                             ->default('#d4af37')
                                             ->helperText('Dipakai untuk tombol utama, link aktif, dan sorotan di seluruh halaman.'),

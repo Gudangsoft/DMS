@@ -1,7 +1,7 @@
 @php
     $settings = \App\Models\Setting::query()->pluck('value', 'key');
     $siteName = $settings->get('site_name', 'Document Management System');
-    $siteTagline = $settings->get('site_tagline', 'STIE Kasih Bangsa');
+    $siteTagline = $settings->get('site_tagline', '');
     $siteLogo = $settings->get('site_logo');
 @endphp
 <!DOCTYPE html>
@@ -14,6 +14,7 @@
         <link rel="icon" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($favicon) }}">
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.tema')
 </head>
 <body class="min-h-screen bg-brand-navy font-sans antialiased">
     <div class="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-brand-navy-light via-brand-navy to-brand-navy-dark px-4 py-12">

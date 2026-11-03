@@ -28,6 +28,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Situs WordPress lama instansi (sumber wp:import-legacy & migrasi perbaikan data).
+    // Kosong pada instalasi baru, sehingga proses impor lama dilewati.
+    'legacy_wordpress' => [
+        'url' => rtrim((string) env('LEGACY_WORDPRESS_URL', ''), '/'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
