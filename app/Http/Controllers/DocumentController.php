@@ -50,7 +50,7 @@ class DocumentController extends Controller
             $query->where('year', $year);
         }
 
-        $documents = $query->latest('published_at')->paginate(10)->withQueryString();
+        $documents = $query->newestFirst()->paginate(10)->withQueryString();
 
         return view('documents.index', [
             'documents' => $documents,

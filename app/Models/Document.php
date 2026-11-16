@@ -143,6 +143,20 @@ class Document extends Model
     }
 
     /**
+     * Public listing order: newest document first. Newest year on top; within
+     * a year, the latest Tanggal Berlaku (effective_date) first. Documents
+     * without an effective_date sort after the dated ones in their year (DESC
+     * puts NULLs last in MySQL). Ties fall back to publish time, then id.
+     */
+    public function scopeNewestFirst(Builder $query): Builder
+    {
+        return $query->orderByDesc('year')
+            ->orderByDesc('effective_date')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id');
+    }
+
+    /**
      * Query-level mirror of DocumentPolicy::view() for the "published only" case —
      * used by catalog/search listings (poin 16, poin 39) so unauthorized rows never
      * even reach the page instead of being filtered one-by-one after the fact.
