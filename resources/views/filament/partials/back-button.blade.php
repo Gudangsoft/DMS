@@ -4,7 +4,9 @@
     each resource's page class individually — one place, applies everywhere.
     Plain browser history.back() so it works the same regardless of which
     resource/page it's on, with no per-resource "index route" wiring needed.
+    Hidden on the Dashboard — it's the panel's home, there's nothing to go back to.
 --}}
+@unless (request()->routeIs('filament.*.pages.dashboard'))
 <x-filament::button
     tag="button"
     type="button"
@@ -14,3 +16,4 @@
 >
     Kembali
 </x-filament::button>
+@endunless

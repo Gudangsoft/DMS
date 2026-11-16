@@ -114,9 +114,9 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                AccountWidget::class,
-            ])
+            // No AccountWidget: the half-width "Selamat Datang / Keluar" card left a
+            // gap on the dashboard, and the avatar menu (top right) already has Keluar.
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
