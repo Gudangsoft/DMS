@@ -29,7 +29,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
     'document_number', 'document_code', 'title', 'description',
     'document_category_id', 'document_subcategory_id', 'document_type_id',
     'unit_id', 'owner_id', 'year', 'effective_date', 'expired_date',
-    'confidentiality_level', 'is_public',
+    'sort_order', 'confidentiality_level', 'is_public',
 ])]
 #[ObservedBy(DocumentObserver::class)]
 class Document extends Model
@@ -41,6 +41,7 @@ class Document extends Model
     {
         return [
             'year' => 'integer',
+            'sort_order' => 'integer',
             'effective_date' => 'date',
             'expired_date' => 'date',
             'confidentiality_level' => ConfidentialityLevel::class,
@@ -143,14 +144,17 @@ class Document extends Model
     }
 
     /**
-     * Public listing order: newest document first. Newest year on top; within
+     * Public listing order. Documents an admin pinned with a Sort Order come
+     * first (1 = top). The rest follow automatically: newest year on top; within
      * a year, the latest Tanggal Berlaku (effective_date) first. Documents
      * without an effective_date sort after the dated ones in their year (DESC
      * puts NULLs last in MySQL). Ties fall back to publish time, then id.
      */
     public function scopeNewestFirst(Builder $query): Builder
     {
-        return $query->orderByDesc('year')
+        return $query->orderByRaw('sort_order IS NULL')
+            ->orderBy('sort_order')
+            ->orderByDesc('year')
             ->orderByDesc('effective_date')
             ->orderByDesc('published_at')
             ->orderByDesc('id');

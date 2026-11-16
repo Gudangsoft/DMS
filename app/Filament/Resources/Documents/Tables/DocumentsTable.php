@@ -21,6 +21,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -52,6 +53,14 @@ class DocumentsTable
                 TextColumn::make('year')
                     ->label('Tahun')
                     ->sortable(),
+                TextInputColumn::make('sort_order')
+                    ->label('Sort Order')
+                    ->type('number')
+                    ->rules(['nullable', 'integer', 'min:1'])
+                    ->placeholder('auto')
+                    ->disabled(fn ($record) => ! auth()->user()?->can('update', $record))
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('current_version')
                     ->label('Versi'),
                 TextColumn::make('status')
