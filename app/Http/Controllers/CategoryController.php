@@ -31,8 +31,7 @@ class CategoryController extends Controller
         $documentsByYear = $category->documents()
             ->visibleTo($request->user())
             ->with(['subcategory', 'type', 'unit'])
-            ->orderByDesc('year')
-            ->latest('published_at')
+            ->newestFirst()
             ->get()
             ->groupBy('year');
 

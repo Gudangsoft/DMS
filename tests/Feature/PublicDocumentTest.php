@@ -199,4 +199,23 @@ class PublicDocumentTest extends TestCase
             ->get(route('documents.show', $document->uuid))
             ->assertOk();
     }
+
+    public function test_document_list_shows_newest_effective_date_first(): void
+    {
+        $make = function (string $title, int $year, ?string $effective): Document {
+            $doc = $this->publishedDocumentWithFile();
+            $doc->forceFill(['title' => $title, 'year' => $year, 'effective_date' => $effective])->save();
+
+            return $doc;
+        };
+
+        $make('Dok Lama 2024', 2024, '2024-12-01');
+        $make('Dok 2025 Tanpa Tanggal', 2025, null);
+        $make('Dok Maret 2025', 2025, '2025-03-10');
+        $make('Dok Agustus 2025', 2025, '2025-08-20');
+
+        $this->get(route('documents.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['Dok Agustus 2025', 'Dok Maret 2025', 'Dok 2025 Tanpa Tanggal', 'Dok Lama 2024']);
+    }
 }
