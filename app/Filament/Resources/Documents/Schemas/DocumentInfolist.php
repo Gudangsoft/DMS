@@ -36,6 +36,13 @@ class DocumentInfolist
                         TextEntry::make('expired_date')->label('Tanggal Kadaluarsa')->date('d F Y')->placeholder('-'),
                         TextEntry::make('status')->label('Status')->badge(),
                         TextEntry::make('confidentiality_level')->label('Tingkat Akses')->badge(),
+                        TextEntry::make('validity')->label('Keberlakuan')->badge(),
+                        TextEntry::make('supersededBy.title')->label('Digantikan oleh')
+                            ->visible(fn ($record) => $record->superseded_by_id !== null)
+                            ->url(fn ($record) => $record->superseded_by_id
+                                ? \App\Filament\Resources\Documents\DocumentResource::getUrl('view', ['record' => $record->superseded_by_id])
+                                : null),
+                        TextEntry::make('sort_order')->label('Urutan Tampil')->placeholder('Otomatis'),
                         TextEntry::make('description')->label('Deskripsi')->columnSpan(3)->placeholder('-'),
                     ]),
 

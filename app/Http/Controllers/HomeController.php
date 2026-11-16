@@ -32,6 +32,12 @@ class HomeController extends Controller
                 ->latest('published_at')
                 ->limit(6)
                 ->get(),
+            'popularDocuments' => (clone $visible)
+                ->with(['category', 'unit'])
+                ->where('download_count', '>', 0)
+                ->orderByDesc('download_count')
+                ->limit(6)
+                ->get(),
         ]);
     }
 }

@@ -26,6 +26,7 @@ class DocumentObserver
         $document->current_version ??= '1.0';
         $document->download_count ??= 0;
         $document->is_public ??= false;
+        $document->validity ??= \App\Enums\DocumentValidity::Berlaku;
     }
 
     /**
@@ -34,6 +35,16 @@ class DocumentObserver
     public function updating(Document $document): void
     {
         $document->updated_by = auth()->id();
+
+        // A new/changed expiry date deserves a fresh reminder.
+        if ($document->isDirty('expired_date')) {
+            $document->expiry_notified_at = null;
+        }
+
+        // Only a "Digantikan" document points at a replacement.
+        if ($document->isDirty('validity') && $document->validity !== \App\Enums\DocumentValidity::Digantikan) {
+            $document->superseded_by_id = null;
+        }
     }
 
     protected function generateUniqueSlug(string $title): string

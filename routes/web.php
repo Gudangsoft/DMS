@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssessorPackageController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentPreviewController;
@@ -37,6 +38,13 @@ Route::get('/documents/{document:uuid}/download', [SecureDownloadController::cla
     ->name('documents.download');
 Route::get('/documents/{document:uuid}/download/{version}', [SecureDownloadController::class, '__invoke'])
     ->name('documents.download.version');
+
+// Paket Dokumen Asesor — akses tanpa akun lewat token rahasia (lihat AssessorPackageController).
+Route::middleware('throttle:60,1')->prefix('paket/{token}')->name('assessor-packages.')->group(function () {
+    Route::get('/', [AssessorPackageController::class, 'show'])->name('show');
+    Route::get('/unduh-semua', [AssessorPackageController::class, 'zip'])->middleware('throttle:5,1')->name('zip');
+    Route::get('/dokumen/{uuid}', [AssessorPackageController::class, 'file'])->name('file');
+});
 
 // Poin 25 — QR verification, deliberately public/unauthenticated.
 Route::get('/verify-document/{uuid}', VerifyDocumentController::class)->name('verify-document');

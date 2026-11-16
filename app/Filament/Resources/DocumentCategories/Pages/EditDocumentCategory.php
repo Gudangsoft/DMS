@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\DocumentCategories\Pages;
 
 use App\Filament\Resources\DocumentCategories\DocumentCategoryResource;
-use Filament\Actions\DeleteAction;
+use App\Filament\Support\GuardedDeleteActions;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
@@ -15,7 +15,9 @@ class EditDocumentCategory extends EditRecord
     {
         return [
             ViewAction::make(),
-            DeleteAction::make(),
+            GuardedDeleteActions::delete(),
+            GuardedDeleteActions::restore(),
+            GuardedDeleteActions::forceDelete(),
         ];
     }
 }

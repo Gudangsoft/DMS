@@ -78,6 +78,10 @@ class AdminPanelProvider extends PanelProvider
             // and covers every resource without needing a per-page override.
             ->resourceCreatePageRedirect('index')
             ->resourceEditPageRedirect('index')
+            // Custom theme = Filament's stylesheet + the Tailwind classes used in
+            // this app's own admin views (Reports, Cek Kualitas Data, Atur Urutan…),
+            // which Filament's prebuilt CSS doesn't include.
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::hex('#0B2545'),
                 'gray' => Color::Slate,

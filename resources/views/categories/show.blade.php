@@ -47,7 +47,8 @@
                                     {{ $document->subcategory->name }}
                                 </span>
                             @endif
-                            <h3 class="mt-3 line-clamp-2 font-semibold text-gray-800 group-hover:text-brand-navy">{{ $document->title }}</h3>
+                            <div class="mt-3 flex flex-wrap gap-1.5"><x-validity-badge :document="$document" /></div>
+                            <h3 class="mt-2 line-clamp-2 font-semibold text-gray-800 group-hover:text-brand-navy">{{ $document->title }}</h3>
                             <p class="mt-1 line-clamp-2 text-sm text-gray-500">
                                 {{ $document->description ?: 'Belum ada deskripsi untuk dokumen ini.' }}
                             </p>

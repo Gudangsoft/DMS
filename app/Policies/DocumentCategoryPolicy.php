@@ -33,4 +33,29 @@ class DocumentCategoryPolicy
             && $category->documents()->doesntExist()
             && $category->subcategories()->doesntExist();
     }
+
+    public function restore(User $user, DocumentCategory $category): bool
+    {
+        return $user->can('master_data.manage');
+    }
+
+    public function forceDelete(User $user, DocumentCategory $category): bool
+    {
+        return $user->can('master_data.manage') && $category->deletionBlocker() === null;
+    }
+
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('master_data.manage');
+    }
+
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('master_data.manage');
+    }
+
+    public function deleteAny(User $user): bool
+    {
+        return $user->can('master_data.manage');
+    }
 }

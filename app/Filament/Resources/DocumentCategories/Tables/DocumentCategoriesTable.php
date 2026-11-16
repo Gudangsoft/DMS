@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\DocumentCategories\Tables;
 
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
+use App\Filament\Support\GuardedDeleteActions;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class DocumentCategoriesTable
@@ -49,16 +49,15 @@ class DocumentCategoriesTable
             ])
             ->defaultSort('sort_order')
             ->filters([
-                //
+                TrashedFilter::make()->label('Tong Sampah'),
             ])
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                GuardedDeleteActions::restore(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                GuardedDeleteActions::bulk(),
             ]);
     }
 }

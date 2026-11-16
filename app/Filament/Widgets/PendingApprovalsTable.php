@@ -16,7 +16,7 @@ class PendingApprovalsTable extends TableWidget
 {
     protected static ?string $heading = 'Menunggu Approval';
 
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 6;
 
     protected int|string|array $columnSpan = 'full';
 

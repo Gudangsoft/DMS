@@ -136,4 +136,35 @@
             @endforelse
         </div>
     </div>
+    {{-- Paling banyak diunduh --}}
+    @if ($popularDocuments->isNotEmpty())
+        <div class="mt-16">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold tracking-widest text-brand-gold uppercase">Populer</p>
+                    <h2 class="mt-1 text-lg font-semibold text-gray-800">Paling Banyak Diunduh</h2>
+                </div>
+                <a href="{{ route('documents.index', ['sort' => 'popular']) }}" class="flex items-center gap-1 text-sm font-medium text-brand-navy hover:text-brand-gold">
+                    Lihat semua <x-heroicon-o-arrow-right class="h-4 w-4" />
+                </a>
+            </div>
+            <ol class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($popularDocuments as $document)
+                    <li>
+                        <a href="{{ route('documents.show', $document->uuid) }}"
+                            class="group flex h-full items-start gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-950/5 transition hover:-translate-y-0.5 hover:shadow-md">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gold/15 text-sm font-bold text-brand-navy">{{ $loop->iteration }}</span>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="line-clamp-2 font-semibold text-gray-800 group-hover:text-brand-navy">{{ $document->title }}</h3>
+                                <p class="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
+                                    <span>{{ $document->category->name }}</span>
+                                    <span class="flex items-center gap-1"><x-heroicon-o-arrow-down-tray class="h-3.5 w-3.5" />{{ number_format($document->download_count, 0, ',', '.') }}×</span>
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                @endforeach
+            </ol>
+        </div>
+    @endif
 @endsection

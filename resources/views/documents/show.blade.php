@@ -6,9 +6,44 @@
             <span class="inline-flex rounded bg-brand-navy/10 px-2 py-0.5 text-xs font-medium text-brand-navy">
                 {{ $document->category->name }}@if ($document->subcategory) &middot; @if ($document->subcategory->code){{ $document->subcategory->code }}. @endif{{ $document->subcategory->name }} @endif
             </span>
+            <x-validity-badge :document="$document" class="ml-1" />
             <h1 class="mt-3 text-2xl font-semibold text-gray-800">{{ $document->title }}</h1>
             @if ($document->description)
                 <p class="mt-2 text-sm text-gray-600">{{ $document->description }}</p>
+            @endif
+
+            {{-- Keberlakuan: arahkan pembaca ke dokumen yang sekarang berlaku --}}
+            @if ($document->validity !== \App\Enums\DocumentValidity::Berlaku)
+                <div class="mt-4 flex gap-3 rounded-lg bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-600/20">
+                    <x-heroicon-o-exclamation-triangle class="h-5 w-5 shrink-0" />
+                    <div>
+                        @if ($document->validity === \App\Enums\DocumentValidity::Dicabut)
+                            Dokumen ini <strong>sudah dicabut</strong> dan tidak berlaku lagi. Ditampilkan untuk arsip/riwayat.
+                        @else
+                            Dokumen ini <strong>sudah digantikan</strong> dan tidak berlaku lagi.
+                            @if ($replacement)
+                                Dokumen yang berlaku sekarang:
+                                <a href="{{ route('documents.show', $replacement->uuid) }}" class="font-semibold underline hover:text-amber-900">{{ $replacement->title }}</a>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            @elseif ($document->isExpired())
+                <div class="mt-4 flex gap-3 rounded-lg bg-red-50 p-4 text-sm text-red-800 ring-1 ring-red-600/20">
+                    <x-heroicon-o-clock class="h-5 w-5 shrink-0" />
+                    <div>Masa berlaku dokumen ini telah berakhir pada <strong>{{ $document->expired_date->translatedFormat('d F Y') }}</strong>.</div>
+                </div>
+            @endif
+
+            @if ($replaces->isNotEmpty())
+                <div class="mt-4 rounded-lg bg-white p-4 text-sm shadow-sm ring-1 ring-gray-950/5">
+                    <p class="font-medium text-gray-700">Dokumen ini menggantikan:</p>
+                    <ul class="mt-1 list-inside list-disc text-gray-600">
+                        @foreach ($replaces as $old)
+                            <li><a href="{{ route('documents.show', $old->uuid) }}" class="hover:text-brand-navy hover:underline">{{ $old->title }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
 
             {{-- Poin 17: preview sebelum download --}}
@@ -59,6 +94,10 @@
                     <div class="flex justify-between"><dt class="text-gray-500">Tahun</dt><dd class="font-medium">{{ $document->year }}</dd></div>
                     <div class="flex justify-between"><dt class="text-gray-500">Versi</dt><dd class="font-medium">{{ $document->current_version }}</dd></div>
                     <div class="flex justify-between"><dt class="text-gray-500">Berlaku</dt><dd class="font-medium">{{ $document->effective_date?->translatedFormat('d M Y') ?? '-' }}</dd></div>
+                    @if ($document->expired_date)
+                        <div class="flex justify-between"><dt class="text-gray-500">Kadaluarsa</dt><dd class="font-medium">{{ $document->expired_date->translatedFormat('d M Y') }}</dd></div>
+                    @endif
+                    <div class="flex justify-between"><dt class="text-gray-500">Diunduh</dt><dd class="font-medium">{{ number_format($document->download_count, 0, ',', '.') }}×</dd></div>
                     <div class="flex justify-between"><dt class="text-gray-500">Status</dt><dd class="font-medium">{{ $document->status->getLabel() }}</dd></div>
                 </dl>
 

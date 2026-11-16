@@ -12,7 +12,7 @@ class DocumentsByCategoryChart extends ChartWidget
 {
     protected ?string $heading = 'Dokumen berdasarkan Kategori';
 
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 4;
 
     protected int|string|array $columnSpan = [
         'md' => 1,

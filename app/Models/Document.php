@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ConfidentialityLevel;
 use App\Enums\DocumentStatus;
+use App\Enums\DocumentValidity;
 use App\Observers\DocumentObserver;
 use Database\Factories\DocumentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,7 +31,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
     'document_number', 'document_code', 'title', 'description',
     'document_category_id', 'document_subcategory_id', 'document_type_id',
     'unit_id', 'owner_id', 'year', 'effective_date', 'expired_date',
-    'sort_order', 'confidentiality_level', 'is_public',
+    'sort_order', 'validity', 'superseded_by_id', 'confidentiality_level', 'is_public',
 ])]
 #[ObservedBy(DocumentObserver::class)]
 class Document extends Model
@@ -44,6 +46,8 @@ class Document extends Model
             'sort_order' => 'integer',
             'effective_date' => 'date',
             'expired_date' => 'date',
+            'validity' => DocumentValidity::class,
+            'expiry_notified_at' => 'datetime',
             'confidentiality_level' => ConfidentialityLevel::class,
             'status' => DocumentStatus::class,
             'download_count' => 'integer',
@@ -61,6 +65,7 @@ class Document extends Model
             ->logOnly([
                 'title', 'status', 'confidentiality_level', 'current_version',
                 'document_category_id', 'document_subcategory_id', 'unit_id',
+                'validity', 'superseded_by_id', 'sort_order', 'year',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
@@ -143,17 +148,51 @@ class Document extends Model
         return $this->hasMany(DocumentDownload::class);
     }
 
-    /**
-     * Public listing order. Documents an admin pinned with a Sort Order come
-     * first (1 = top). The rest follow automatically: newest year on top; within
-     * a year, the latest Tanggal Berlaku (effective_date) first. Documents
-     * without an effective_date sort after the dated ones in their year (DESC
-     * puts NULLs last in MySQL). Ties fall back to publish time, then id.
-     */
-    public function scopeNewestFirst(Builder $query): Builder
+    public function supersededBy(): BelongsTo
     {
-        return $query->orderByRaw('sort_order IS NULL')
-            ->orderBy('sort_order')
+        return $this->belongsTo(Document::class, 'superseded_by_id');
+    }
+
+    /** Older documents this one replaced ("Menggantikan"). */
+    public function supersedes(): HasMany
+    {
+        return $this->hasMany(Document::class, 'superseded_by_id');
+    }
+
+    public function content(): HasOne
+    {
+        return $this->hasOne(DocumentContent::class);
+    }
+
+    public function assessorPackages(): BelongsToMany
+    {
+        return $this->belongsToMany(AssessorPackage::class, 'assessor_package_document');
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expired_date !== null && $this->expired_date->isPast() && ! $this->expired_date->isToday();
+    }
+
+    /**
+     * Public listing order.
+     *
+     * With $usePins (a single category/subcategory listing), documents an admin
+     * pinned with a Sort Order come first (1 = top). Pins are skipped on the
+     * cross-category "Semua Dokumen" list, since each menu's 1, 2, 3… would
+     * otherwise all pile up together at the top.
+     *
+     * Then: documents still in force (Berlaku) before replaced/revoked ones;
+     * newest year on top; within a year, the latest Tanggal Berlaku first
+     * (NULLs last — DESC in MySQL). Ties fall back to publish time, then id.
+     */
+    public function scopeNewestFirst(Builder $query, bool $usePins = true): Builder
+    {
+        if ($usePins) {
+            $query->orderByRaw('sort_order IS NULL')->orderBy('sort_order');
+        }
+
+        return $query->orderByRaw('validity <> ?', [DocumentValidity::Berlaku->value])
             ->orderByDesc('year')
             ->orderByDesc('effective_date')
             ->orderByDesc('published_at')

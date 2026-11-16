@@ -4,6 +4,9 @@ namespace App\Filament\Resources\Documents\Tables;
 
 use App\Enums\ConfidentialityLevel;
 use App\Enums\DocumentStatus;
+use App\Enums\DocumentValidity;
+use App\Models\Document;
+use App\Models\DocumentSubcategory;
 use App\Models\DocumentCategory;
 use App\Models\Unit;
 use App\Models\User;
@@ -11,6 +14,7 @@ use App\Services\DocumentApprovalService;
 use App\Services\DocumentService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -18,6 +22,10 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Support\Collection;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
@@ -59,6 +67,10 @@ class DocumentsTable
                     ->alignCenter()
                     ->sortable()
                     ->toggleable(),
+                TextColumn::make('validity')
+                    ->label('Keberlakuan')
+                    ->badge()
+                    ->toggleable(),
                 TextColumn::make('current_version')
                     ->label('Versi'),
                 TextColumn::make('status')
@@ -81,6 +93,14 @@ class DocumentsTable
                 SelectFilter::make('unit_id')
                     ->label('Unit')
                     ->options(fn () => Unit::pluck('name', 'id')),
+                SelectFilter::make('validity')
+                    ->label('Keberlakuan')
+                    ->options(DocumentValidity::class),
+                SelectFilter::make('document_subcategory_id')
+                    ->label('Subkategori')
+                    ->searchable()
+                    ->options(fn () => DocumentSubcategory::with('category')->orderBy('document_category_id')->orderBy('sort_order')->get()
+                        ->mapWithKeys(fn ($s) => [$s->id => "{$s->category?->name} › {$s->name}"])),
                 SelectFilter::make('confidentiality_level')
                     ->label('Tingkat Akses')
                     ->options(collect(ConfidentialityLevel::cases())->mapWithKeys(fn ($c) => [$c->value => $c->getLabel()])),
@@ -206,9 +226,72 @@ class DocumentsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    static::bulkEdit('bulk_move', 'Pindahkan Kategori', 'heroicon-m-folder-arrow-down', [
+                        Select::make('document_category_id')
+                            ->label('Kategori')
+                            ->options(fn () => DocumentCategory::orderBy('sort_order')->pluck('name', 'id'))
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set) => $set('document_subcategory_id', null)),
+                        Select::make('document_subcategory_id')
+                            ->label('Subkategori')
+                            ->options(fn (Get $get) => DocumentSubcategory::where('document_category_id', $get('document_category_id'))
+                                ->orderBy('sort_order')->pluck('name', 'id'))
+                            ->placeholder('Tanpa subkategori'),
+                    ]),
+                    static::bulkEdit('bulk_year', 'Ubah Tahun', 'heroicon-m-calendar', [
+                        TextInput::make('year')->label('Tahun')->numeric()->integer()->minValue(1900)->maxValue(2100)->required(),
+                    ]),
+                    static::bulkEdit('bulk_validity', 'Ubah Keberlakuan', 'heroicon-m-check-badge', [
+                        Select::make('validity')->label('Status Keberlakuan')->options(DocumentValidity::class)->required(),
+                    ]),
+                    static::bulkEdit('bulk_access', 'Ubah Tingkat Akses', 'heroicon-m-lock-closed', [
+                        Select::make('confidentiality_level')
+                            ->label('Tingkat Akses')
+                            ->options(collect(ConfidentialityLevel::cases())->mapWithKeys(fn ($c) => [$c->value => $c->getLabel()]))
+                            ->required(),
+                    ]),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * Poin "edit massal": apply the same field values to every selected
+     * document the user is allowed to update; others are skipped and counted.
+     *
+     * @param  array<int, \Filament\Schemas\Components\Component>  $schema
+     */
+    protected static function bulkEdit(string $name, string $label, string $icon, array $schema): BulkAction
+    {
+        return BulkAction::make($name)
+            ->label($label)
+            ->icon($icon)
+            ->schema($schema)
+            ->modalSubmitActionLabel('Terapkan')
+            ->deselectRecordsAfterCompletion()
+            ->action(function (Collection $records, array $data) {
+                $updated = 0;
+                $skipped = 0;
+
+                foreach ($records as $record) {
+                    /** @var Document $record */
+                    if (! auth()->user()->can('update', $record)) {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $record->update($data);
+                    $updated++;
+                }
+
+                Notification::make()
+                    ->title("{$updated} dokumen diperbarui")
+                    ->body($skipped ? "{$skipped} dokumen dilewati karena Anda tidak berhak mengubahnya." : null)
+                    ->success()
+                    ->send();
+            });
     }
 }

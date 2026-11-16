@@ -88,7 +88,22 @@ class DocumentVersionService
 
         $document->forceFill(['current_version' => $version->version])->save();
 
+        $this->indexContent($document);
+
         return $version;
+    }
+
+    /**
+     * Keep "search inside the document" in sync with the newest version.
+     * Never allowed to fail the upload itself.
+     */
+    protected function indexContent(Document $document): void
+    {
+        try {
+            app(DocumentContentExtractor::class)->index($document);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**
@@ -135,6 +150,8 @@ class DocumentVersionService
         ]);
 
         $document->forceFill(['current_version' => $version->version])->save();
+
+        $this->indexContent($document);
 
         return $version;
     }

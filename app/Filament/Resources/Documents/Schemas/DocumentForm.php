@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Documents\Schemas;
 
 use App\Enums\ConfidentialityLevel;
+use App\Enums\DocumentValidity;
+use App\Models\Document;
 use App\Models\DocumentCategory;
 use App\Models\DocumentSubcategory;
 use App\Models\DocumentType;
@@ -122,6 +124,27 @@ class DocumentForm
                             ->nullable()
                             ->placeholder('Kosongkan saja (otomatis)')
                             ->helperText('Opsional. Isi 1 agar dokumen ini tampil paling atas di menunya, 2 di bawahnya, dst. Jika dikosongkan, dokumen diurutkan otomatis: tahun dan Tanggal Berlaku terbaru di atas.'),
+
+                        Select::make('validity')
+                            ->label('Status Keberlakuan')
+                            ->options(DocumentValidity::class)
+                            ->default(DocumentValidity::Berlaku)
+                            ->required()
+                            ->live()
+                            ->helperText('Dokumen "Digantikan"/"Dicabut" tetap bisa dilihat di web, tapi diberi label dan diletakkan di bawah dokumen yang berlaku.'),
+                        Select::make('superseded_by_id')
+                            ->label('Digantikan oleh')
+                            ->visible(fn (Get $get) => in_array($get('validity'), [DocumentValidity::Digantikan, DocumentValidity::Digantikan->value], true))
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (string $search, ?Document $record) => Document::query()
+                                ->when($record, fn ($q) => $q->whereKeyNot($record->getKey()))
+                                ->where('title', 'like', "%{$search}%")
+                                ->newestFirst(false)
+                                ->limit(30)
+                                ->get()
+                                ->mapWithKeys(fn (Document $d) => [$d->id => "{$d->title} ({$d->year})"]))
+                            ->getOptionLabelUsing(fn ($value) => ($d = Document::find($value)) ? "{$d->title} ({$d->year})" : null)
+                            ->helperText('Pilih dokumen pengganti yang sekarang berlaku. Di web akan muncul tautan ke dokumen ini.'),
 
                         Select::make('confidentiality_level')
                             ->label('Tingkat Akses')

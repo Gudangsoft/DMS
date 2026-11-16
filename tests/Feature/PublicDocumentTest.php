@@ -219,11 +219,16 @@ class PublicDocumentTest extends TestCase
             ->assertSeeInOrder(['Dok Agustus 2025', 'Dok Maret 2025', 'Dok 2025 Tanpa Tanggal', 'Dok Lama 2024']);
     }
 
-    public function test_sort_order_pins_documents_above_the_automatic_order(): void
+    public function test_sort_order_pins_documents_above_the_automatic_order_within_a_menu(): void
     {
-        $make = function (string $title, int $year, ?int $sortOrder): Document {
+        $sub = \App\Models\DocumentSubcategory::factory()->create();
+
+        $make = function (string $title, int $year, ?int $sortOrder) use ($sub): Document {
             $doc = $this->publishedDocumentWithFile();
-            $doc->forceFill(['title' => $title, 'year' => $year, 'sort_order' => $sortOrder])->save();
+            $doc->forceFill([
+                'title' => $title, 'year' => $year, 'sort_order' => $sortOrder,
+                'document_category_id' => $sub->document_category_id, 'document_subcategory_id' => $sub->id,
+            ])->save();
 
             return $doc;
         };
@@ -233,7 +238,7 @@ class PublicDocumentTest extends TestCase
         $make('Statuta Pin Satu 2022', 2022, 1);
         $make('Statuta Otomatis 1998', 1998, null);
 
-        $this->get(route('documents.index'))
+        $this->get(route('documents.index', ['subcategory' => $sub->id]))
             ->assertOk()
             ->assertSeeInOrder(['Statuta Pin Satu 2022', 'Statuta Pin Dua 2016', 'Statuta Otomatis 2026', 'Statuta Otomatis 1998']);
     }

@@ -45,7 +45,7 @@
                 <form method="GET" action="{{ route('documents.search') }}" class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5">
                     <div class="relative">
                         <x-heroicon-o-magnifying-glass class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari dokumen..."
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari judul atau isi dokumen..."
                             class="w-full rounded-md border-gray-300 pl-9 text-sm shadow-sm focus:border-brand-navy focus:ring-brand-navy">
                     </div>
                 </form>
@@ -150,7 +150,16 @@
 
         {{-- Feed --}}
         <div class="mt-6 min-w-0 flex-1 lg:mt-0">
-            <p class="text-sm text-gray-500">{{ $documents->total() }} dokumen ditemukan</p>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="text-sm text-gray-500">{{ $documents->total() }} dokumen ditemukan</p>
+                @php($popular = request('sort') === 'popular')
+                <div class="inline-flex rounded-lg bg-white p-0.5 text-xs font-medium shadow-sm ring-1 ring-gray-950/5">
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => null, 'page' => null]) }}"
+                        class="rounded-md px-3 py-1.5 {{ $popular ? 'text-gray-500 hover:text-brand-navy' : 'bg-brand-navy text-white' }}">Terbaru</a>
+                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'popular', 'page' => null]) }}"
+                        class="rounded-md px-3 py-1.5 {{ $popular ? 'bg-brand-navy text-white' : 'text-gray-500 hover:text-brand-navy' }}">Terpopuler</a>
+                </div>
+            </div>
 
             <div class="mt-3 space-y-4">
                 @forelse ($documents as $document)
@@ -171,15 +180,26 @@
                         </div>
 
                         <div class="min-w-0 flex-1">
+                            <div class="mb-1.5 flex flex-wrap gap-1.5"><x-validity-badge :document="$document" /></div>
                             <h2 class="line-clamp-2 font-semibold text-gray-800 group-hover:text-brand-navy">{{ $document->title }}</h2>
-                            <p class="mt-1 line-clamp-2 text-sm text-gray-500">
-                                {{ $document->description ?: 'Belum ada deskripsi untuk dokumen ini.' }}
-                            </p>
+                            @if (!empty($snippets[$document->id]))
+                                <p class="mt-1 line-clamp-3 text-sm text-gray-600">
+                                    <span class="font-medium text-brand-navy">Ditemukan di isi dokumen:</span>
+                                    {!! $snippets[$document->id] !!}
+                                </p>
+                            @else
+                                <p class="mt-1 line-clamp-2 text-sm text-gray-500">
+                                    {{ $document->description ?: 'Belum ada deskripsi untuk dokumen ini.' }}
+                                </p>
+                            @endif
                             <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
                                 <span class="flex items-center gap-1"><x-heroicon-o-building-office-2 class="h-3.5 w-3.5" />{{ $document->unit->name }}</span>
                                 <span class="flex items-center gap-1"><x-heroicon-o-calendar class="h-3.5 w-3.5" />{{ $document->year }}</span>
                                 <span class="flex items-center gap-1"><x-heroicon-o-document-text class="h-3.5 w-3.5" />{{ $document->document_number ?? 'Belum bernomor' }}</span>
                                 <span class="rounded bg-gray-100 px-1.5 py-0.5 font-medium text-gray-500">v{{ $document->current_version }}</span>
+                                @if ($document->download_count)
+                                    <span class="flex items-center gap-1"><x-heroicon-o-arrow-down-tray class="h-3.5 w-3.5" />{{ number_format($document->download_count, 0, ',', '.') }} unduhan</span>
+                                @endif
                             </div>
                         </div>
                     </a>
