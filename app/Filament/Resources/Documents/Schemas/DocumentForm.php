@@ -115,12 +115,13 @@ class DocumentForm
                         DatePicker::make('expired_date')
                             ->label('Tanggal Kadaluarsa'),
                         TextInput::make('sort_order')
-                            ->label('Sort Order')
+                            ->label('Urutan Tampil di Web')
                             ->numeric()
                             ->integer()
                             ->minValue(1)
                             ->nullable()
-                            ->helperText('Opsional. Isi 1 agar tampil paling atas di daftar web, 2 di bawahnya, dst. Kosongkan untuk urutan otomatis (tahun & Tanggal Berlaku terbaru di atas).'),
+                            ->placeholder('Kosongkan saja (otomatis)')
+                            ->helperText('Opsional. Isi 1 agar dokumen ini tampil paling atas di menunya, 2 di bawahnya, dst. Jika dikosongkan, dokumen diurutkan otomatis: tahun dan Tanggal Berlaku terbaru di atas.'),
 
                         Select::make('confidentiality_level')
                             ->label('Tingkat Akses')
