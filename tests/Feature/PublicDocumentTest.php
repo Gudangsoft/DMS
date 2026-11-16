@@ -218,4 +218,23 @@ class PublicDocumentTest extends TestCase
             ->assertOk()
             ->assertSeeInOrder(['Dok Agustus 2025', 'Dok Maret 2025', 'Dok 2025 Tanpa Tanggal', 'Dok Lama 2024']);
     }
+
+    public function test_sort_order_pins_documents_above_the_automatic_order(): void
+    {
+        $make = function (string $title, int $year, ?int $sortOrder): Document {
+            $doc = $this->publishedDocumentWithFile();
+            $doc->forceFill(['title' => $title, 'year' => $year, 'sort_order' => $sortOrder])->save();
+
+            return $doc;
+        };
+
+        $make('Statuta Otomatis 2026', 2026, null);
+        $make('Statuta Pin Dua 2016', 2016, 2);
+        $make('Statuta Pin Satu 2022', 2022, 1);
+        $make('Statuta Otomatis 1998', 1998, null);
+
+        $this->get(route('documents.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['Statuta Pin Satu 2022', 'Statuta Pin Dua 2016', 'Statuta Otomatis 2026', 'Statuta Otomatis 1998']);
+    }
 }

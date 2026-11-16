@@ -31,6 +31,7 @@ class CategoryController extends Controller
         $documentsByYear = $category->documents()
             ->visibleTo($request->user())
             ->with(['subcategory', 'type', 'unit'])
+            ->orderByDesc('year') // keep year sections in order; Sort Order pins within a year
             ->newestFirst()
             ->get()
             ->groupBy('year');

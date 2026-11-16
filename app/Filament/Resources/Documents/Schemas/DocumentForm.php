@@ -114,6 +114,13 @@ class DocumentForm
                             ->label('Tanggal Berlaku'),
                         DatePicker::make('expired_date')
                             ->label('Tanggal Kadaluarsa'),
+                        TextInput::make('sort_order')
+                            ->label('Sort Order')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(1)
+                            ->nullable()
+                            ->helperText('Opsional. Isi 1 agar tampil paling atas di daftar web, 2 di bawahnya, dst. Kosongkan untuk urutan otomatis (tahun & Tanggal Berlaku terbaru di atas).'),
 
                         Select::make('confidentiality_level')
                             ->label('Tingkat Akses')
