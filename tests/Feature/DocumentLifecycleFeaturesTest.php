@@ -375,6 +375,29 @@ class DocumentLifecycleFeaturesTest extends TestCase
         $this->assertStringContainsString('strategis', (string) $doc->content()->value('content'));
     }
 
+    public function test_sort_dropdown_orders_the_list(): void
+    {
+        $this->publishedDocument(['title' => 'Bravo Statuta', 'year' => 2016]);
+        $this->publishedDocument(['title' => 'Alpha Statuta', 'year' => 2026]);
+        $this->publishedDocument(['title' => 'Charlie Statuta', 'year' => 2022]);
+
+        $this->get(route('documents.index', ['q' => 'Statuta']))
+            ->assertSee('Urutkan')
+            ->assertSeeInOrder(['Alpha Statuta', 'Charlie Statuta', 'Bravo Statuta']);
+
+        $this->get(route('documents.index', ['q' => 'Statuta', 'sort' => 'oldest']))
+            ->assertSeeInOrder(['Bravo Statuta', 'Charlie Statuta', 'Alpha Statuta']);
+
+        $this->get(route('documents.index', ['q' => 'Statuta', 'sort' => 'title']))
+            ->assertSeeInOrder(['Alpha Statuta', 'Bravo Statuta', 'Charlie Statuta']);
+
+        $this->get(route('documents.index', ['q' => 'Statuta', 'sort' => 'title_desc']))
+            ->assertSeeInOrder(['Charlie Statuta', 'Bravo Statuta', 'Alpha Statuta']);
+
+        // Unknown value falls back to the default instead of erroring.
+        $this->get(route('documents.index', ['sort' => 'xyz']))->assertOk();
+    }
+
     // 9. Populer ------------------------------------------------------------------
 
     public function test_home_shows_most_downloaded_documents(): void

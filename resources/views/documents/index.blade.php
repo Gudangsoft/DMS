@@ -152,13 +152,24 @@
         <div class="mt-6 min-w-0 flex-1 lg:mt-0">
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <p class="text-sm text-gray-500">{{ $documents->total() }} dokumen ditemukan</p>
-                @php($popular = request('sort') === 'popular')
-                <div class="inline-flex rounded-lg bg-white p-0.5 text-xs font-medium shadow-sm ring-1 ring-gray-950/5">
-                    <a href="{{ request()->fullUrlWithQuery(['sort' => null, 'page' => null]) }}"
-                        class="rounded-md px-3 py-1.5 {{ $popular ? 'text-gray-500 hover:text-brand-navy' : 'bg-brand-navy text-white' }}">Terbaru</a>
-                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'popular', 'page' => null]) }}"
-                        class="rounded-md px-3 py-1.5 {{ $popular ? 'bg-brand-navy text-white' : 'text-gray-500 hover:text-brand-navy' }}">Terpopuler</a>
-                </div>
+                {{-- Urutkan: navigates on change; works without JS via the hidden submit --}}
+                <form method="GET" action="{{ url()->current() }}" class="flex items-center gap-2">
+                    @foreach (request()->except(['sort', 'page']) as $key => $value)
+                        @if (is_scalar($value))
+                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                        @endif
+                    @endforeach
+                    <label for="sort" class="flex items-center gap-1 text-sm text-gray-500">
+                        <x-heroicon-o-arrows-up-down class="h-4 w-4" /> Urutkan
+                    </label>
+                    <select id="sort" name="sort" onchange="this.form.submit()"
+                        class="rounded-lg border-0 bg-white py-1.5 pr-8 pl-3 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-950/10 focus:ring-2 focus:ring-brand-navy">
+                        @foreach (\App\Http\Controllers\DocumentController::SORTS as $value => $label)
+                            <option value="{{ $value }}" @selected(request('sort', 'newest') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <noscript><button type="submit" class="text-sm text-brand-navy underline">Terapkan</button></noscript>
+                </form>
             </div>
 
             <div class="mt-3 space-y-4">

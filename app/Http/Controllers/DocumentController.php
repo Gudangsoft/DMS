@@ -18,6 +18,16 @@ use Illuminate\Support\Str;
  */
 class DocumentController extends Controller
 {
+    /** "Urutkan" options on the public list (?sort=…). First one is the default. */
+    public const SORTS = [
+        'newest' => 'Terbaru',
+        'oldest' => 'Terlama',
+        'recent' => 'Baru ditambahkan',
+        'popular' => 'Paling banyak diunduh',
+        'title' => 'Judul A–Z',
+        'title_desc' => 'Judul Z–A',
+    ];
+
     public function index(Request $request): View
     {
         $query = Document::query()
@@ -59,12 +69,20 @@ class DocumentController extends Controller
             $query->where('year', $year);
         }
 
-        if ($request->string('sort')->value() === 'popular') {
-            $query->orderByDesc('download_count')->orderByDesc('id');
-        } else {
+        $sort = array_key_exists($request->string('sort')->value(), self::SORTS)
+            ? $request->string('sort')->value()
+            : 'newest';
+
+        match ($sort) {
+            'oldest' => $query->orderByRaw('year IS NULL')->orderBy('year')
+                ->orderByRaw('effective_date IS NULL')->orderBy('effective_date')->orderBy('id'),
+            'title' => $query->orderBy('title'),
+            'title_desc' => $query->orderByDesc('title'),
+            'popular' => $query->orderByDesc('download_count')->orderByDesc('id'),
+            'recent' => $query->orderByDesc('published_at')->orderByDesc('id'),
             // Manual "Urutan" pins only make sense inside one menu.
-            $query->newestFirst(usePins: (bool) ($categoryCode || $subcategoryId));
-        }
+            default => $query->newestFirst(usePins: (bool) ($categoryCode || $subcategoryId)),
+        };
 
         $documents = $query->paginate(10)->withQueryString();
 
