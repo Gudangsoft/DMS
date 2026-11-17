@@ -175,6 +175,30 @@ class Document extends Model
     }
 
     /**
+     * Short text for document cards: the admin-written description when there
+     * is one, otherwise a sentence built from the document's own metadata,
+     * e.g. "Pedoman · Dokumen Mutu › Statuta. Diterbitkan oleh Rektorat, tahun 2026."
+     * Expects category/subcategory/type/unit to be eager-loaded on listings.
+     */
+    public function summary(): string
+    {
+        if (filled($this->description)) {
+            return $this->description;
+        }
+
+        $place = collect([$this->category?->name, $this->subcategory?->name])->filter()->implode(' › ');
+        $head = collect([$this->type?->name, $place])->filter()->implode(' · ');
+
+        $issued = collect([
+            $this->unit?->name ? "Diterbitkan oleh {$this->unit->name}" : null,
+            $this->year ? "tahun {$this->year}" : null,
+        ])->filter()->implode(', ');
+
+        return trim(collect([$head, $issued])->filter()->map(fn ($s) => $s.'.')->implode(' '))
+            ?: 'Dokumen resmi '.config('app.name').'.';
+    }
+
+    /**
      * Public listing order.
      *
      * With $usePins (a single category/subcategory listing), documents an admin

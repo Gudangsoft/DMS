@@ -648,7 +648,9 @@ class ImportWordpressLegacyContent extends Command
                 $document = DB::transaction(function () use ($item, $category, $subcategory, $unit, $type, $uploadedFile, $code) {
                     $document = app(DocumentService::class)->create([
                         'title' => $item['title'],
-                        'description' => 'Diimpor dari WordPress DMS lama — sumber: "'.$item['wp_post_title'].'".',
+                        // Left empty: the public cards show Document::summary() instead
+                        // of an import note visitors don't need to see.
+                        'description' => null,
                         'document_category_id' => $category->id,
                         'document_subcategory_id' => $subcategory?->id,
                         'document_type_id' => $type->id,

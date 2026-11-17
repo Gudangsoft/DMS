@@ -200,7 +200,7 @@
                                 </p>
                             @else
                                 <p class="mt-1 line-clamp-2 text-sm text-gray-500">
-                                    {{ $document->description ?: 'Belum ada deskripsi untuk dokumen ini.' }}
+                                    {{ $document->summary() }}
                                 </p>
                             @endif
                             <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
