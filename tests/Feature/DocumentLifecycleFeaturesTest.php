@@ -355,6 +355,25 @@ class DocumentLifecycleFeaturesTest extends TestCase
             ->assertDontSee('Dokumen Lain');
     }
 
+    public function test_upload_indexes_content_after_the_response_not_during_it(): void
+    {
+        $this->actingAs($this->admin);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML('<p>Kebijakan mutu internal</p>')->output();
+        $tmp = tempnam(sys_get_temp_dir(), 'pdf');
+        file_put_contents($tmp, $pdf);
+
+        $doc = Document::factory()->create();
+        app(\App\Services\DocumentVersionService::class)
+            ->store($doc, new \Illuminate\Http\UploadedFile($tmp, 'kebijakan.pdf', 'application/pdf', null, true), $this->admin);
+
+        // Not indexed inline — the save itself can't be slowed down or crashed by parsing.
+        $this->assertNull($doc->content()->first());
+
+        app(\Illuminate\Support\Defer\DeferredCallbackCollection::class)->invoke();
+
+        $this->assertStringContainsString('mutu internal', (string) $doc->content()->value('content'));
+    }
+
     public function test_pdf_text_is_extracted(): void
     {
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML('<p>Standar mutu penelitian dan pengabdian</p>')->output();

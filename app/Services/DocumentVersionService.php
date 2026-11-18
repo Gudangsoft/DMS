@@ -95,15 +95,29 @@ class DocumentVersionService
 
     /**
      * Keep "search inside the document" in sync with the newest version.
-     * Never allowed to fail the upload itself.
+     *
+     * Deferred until after the response has been sent: parsing a large PDF can
+     * exceed PHP's memory/time limits, and those are fatal errors try/catch
+     * can't stop — run inline, they failed the admin's save ("Terjadi error
+     * ketika memuat halaman"). After the response, the worst case is that the
+     * document just isn't content-searchable until `dms:index-content` runs.
      */
     protected function indexContent(Document $document): void
     {
-        try {
-            app(DocumentContentExtractor::class)->index($document);
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        $documentId = $document->id;
+
+        defer(function () use ($documentId) {
+            @ini_set('memory_limit', '512M');
+            @set_time_limit(120);
+
+            try {
+                if ($document = Document::find($documentId)) {
+                    app(DocumentContentExtractor::class)->index($document);
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }, "index-document-content-{$documentId}");
     }
 
     /**
