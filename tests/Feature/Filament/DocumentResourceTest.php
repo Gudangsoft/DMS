@@ -226,4 +226,51 @@ class DocumentResourceTest extends TestCase
 
         $this->assertSame('Judul Baru', $document->fresh()->title);
     }
+
+    public function test_duplicate_document_number_is_a_form_error_not_a_crash(): void
+    {
+        Document::factory()->create(['document_number' => 'DMS/LPM/5/2024/0013']);
+        $archived = Document::factory()->create(['document_number' => 'DMS/LPM/5/2024/0099']);
+        $archived->delete();
+        $document = Document::factory()->create(['document_number' => 'DMS/LPM/5/2024/0001']);
+
+        Livewire::test(EditDocument::class, ['record' => $document->getRouteKey()])
+            ->fillForm(['document_number' => 'DMS/LPM/5/2024/0013'])
+            ->call('save')
+            ->assertHasFormErrors(['document_number' => 'unique']);
+
+        Livewire::test(EditDocument::class, ['record' => $document->getRouteKey()])
+            ->fillForm(['document_number' => 'DMS/LPM/5/2024/0099'])
+            ->call('save')
+            ->assertHasFormErrors(['document_number' => 'unique']);
+
+        // Keeping its own number is fine.
+        Livewire::test(EditDocument::class, ['record' => $document->getRouteKey()])
+            ->fillForm(['title' => 'Judul Diubah'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+    }
+
+    public function test_generated_number_never_collides_with_existing_ones(): void
+    {
+        $unit = Unit::factory()->create(['code' => 'LPM']);
+        $category = DocumentCategory::factory()->create(['code' => '5']);
+        $service = app(\App\Services\DocumentNumberService::class);
+
+        // Numbers 0001–0013 exist in the series, but only two documents still
+        // sit in this unit/category/year — the old "count + 1" gave 0003/0013.
+        foreach ([1, 13] as $n) {
+            Document::factory()->create([
+                'unit_id' => $unit->id, 'document_category_id' => $category->id, 'year' => 2024,
+                'document_number' => sprintf('DMS/LPM/5/2024/%04d', $n),
+            ]);
+        }
+        Document::factory()->create(['document_number' => 'DMS/LPM/5/2024/0014'])->delete(); // archived, moved elsewhere
+
+        $this->assertSame('DMS/LPM/5/2024/0015', $service->generate($unit, $category, 2024));
+
+        // A document already numbered in this series keeps its number.
+        $own = Document::where('document_number', 'DMS/LPM/5/2024/0013')->first();
+        $this->assertSame('DMS/LPM/5/2024/0013', $service->generate($unit, $category, 2024, $own));
+    }
 }

@@ -92,12 +92,19 @@ class DocumentForm
                         TextInput::make('document_number')
                             ->label('Nomor Dokumen')
                             ->maxLength(255)
+                            // Checked here so a clash shows a clear message on the field
+                            // instead of a database error ("Terjadi error ketika memuat halaman").
+                            // Archived (soft-deleted) documents still hold their number.
+                            ->unique(table: 'documents', column: 'document_number', ignoreRecord: true)
+                            ->validationMessages([
+                                'unique' => 'Nomor dokumen ini sudah dipakai dokumen lain (termasuk yang diarsipkan). Klik ✨ untuk membuat nomor baru, atau ubah nomornya.',
+                            ])
                             ->helperText('Kosongkan untuk diisi manual nanti, atau klik tombol generate.')
                             ->suffixAction(
                                 Action::make('generate')
                                     ->icon('heroicon-m-sparkles')
                                     ->tooltip('Generate otomatis: DMS/{UNIT}/{KATEGORI}/{TAHUN}/{URUT}')
-                                    ->action(function (Set $set, Get $get) {
+                                    ->action(function (Set $set, Get $get, ?Document $record) {
                                         $unit = Unit::find($get('unit_id'));
                                         $category = DocumentCategory::find($get('document_category_id'));
 
@@ -105,7 +112,7 @@ class DocumentForm
                                             return;
                                         }
 
-                                        $set('document_number', app(DocumentNumberService::class)->generate($unit, $category, (int) $get('year')));
+                                        $set('document_number', app(DocumentNumberService::class)->generate($unit, $category, (int) $get('year'), $record));
                                     })
                             ),
                         TextInput::make('document_code')
